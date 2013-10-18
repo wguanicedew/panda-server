@@ -27,6 +27,10 @@ class SiteMapper:
     
     # constructor
     def __init__(self,taskBuffer,verbose=False):
+        ### DEBUG ###
+        verbose = True
+        ### DEBUG ###
+
         _logger.debug('__init__ SiteMapper')
         try:
             # site list
@@ -40,6 +44,8 @@ class SiteMapper:
             
             # create CloudSpec list 
             tmpCloudListDB = taskBuffer.getCloudList()
+            _logger.debug('tmpCloudListDB=%s' % str(tmpCloudListDB))
+
             for tmpName,tmpCloudSpec in tmpCloudListDB.iteritems():
                 self.cloudSpec[tmpName] = {}
                 # copy attributes from CloudSepc
@@ -53,11 +59,14 @@ class SiteMapper:
                 self.cloudSpec[tmpName]['dest']   = self.cloudSpec[tmpName]['tier1']
                 self.cloudSpec[tmpName]['sites']  = []
                 _logger.debug('Cloud->%s %s' % (tmpName,str(self.cloudSpec[tmpName])))
+            _logger.debug('cloudSpec=%s' % str(self.cloudSpec))
             # get list of PandaIDs
             siteIDsList = taskBuffer.getSiteList()
+            _logger.debug('siteIDsList=%s' % str(siteIDsList))
             firstDefault = True
             # read full list from DB
             siteFullList = taskBuffer.getSiteInfo()
+            _logger.debug('siteFullList=%s' % str(siteFullList))
             # read DB to produce paramters in siteinfo dynamically
             for tmpID,tmpNicknameList in siteIDsList.iteritems():
                 for tmpNickname in tmpNicknameList:

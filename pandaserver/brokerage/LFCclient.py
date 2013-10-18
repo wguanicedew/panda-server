@@ -86,7 +86,7 @@ def main():
     # set default values
     options.verbose   = False
     options.lfns      = []
-    options.guids     = []    
+    options.guids = []
     options.lfchost   = ''
     options.storages  = []
     options.infile    = None
@@ -97,7 +97,7 @@ def main():
     except:
         _usage()
         print "ERROR : Invalid options"
-        sys.exit(EC_Main)    
+        sys.exit(EC_Main)
     # set options
     for o, a in opts:
         if o in ("-v",):
@@ -119,7 +119,7 @@ def main():
     if options.infile == None:
         for idx in range(len(options.guids)):
             guid = options.guids[idx]
-            lfn  = options.lfns[idx]        
+            lfn = options.lfns[idx]
             if guid != 'NULL':
                 files[guid] = lfn
     else:

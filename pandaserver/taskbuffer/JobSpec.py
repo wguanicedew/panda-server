@@ -175,15 +175,18 @@ class JobSpec(object):
 
 
     # return expression of bind values for INSERT
-    def bindValuesExpression(cls,useSeq=False):
+    def bindValuesExpression(cls, useSeq=False, backend='oracle'):
         ret = "VALUES("
         for attr in cls._attributes:
             if useSeq and cls._seqAttrMap.has_key(attr):
-                ret += "%s," % cls._seqAttrMap[attr]
+                if backend == 'mysql':
+                    ret += "%s," % "NULL"
+                else:  # backend == 'oracle'
+                    ret += "%s," % cls._seqAttrMap[attr]
             else:
                 ret += ":%s," % attr
         ret = ret[:-1]
-        ret += ")"            
+        ret += ")"
         return ret
     bindValuesExpression = classmethod(bindValuesExpression)
 

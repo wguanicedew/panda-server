@@ -27,6 +27,5 @@ class SiteSpec(object):
             str += '%s:%s ' % (attr,getattr(self,attr))
         return str
 
-        
 
-                       
+

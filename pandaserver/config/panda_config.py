@@ -26,7 +26,17 @@ for tmpKey,tmpVal in tmpDict.iteritems():
     tmpSelf.__dict__[tmpKey] = tmpVal
 
 # set hostname
-tmpSelf.__dict__['pserverhost'] = commands.getoutput('hostname -f')
+#tmpSelf.__dict__['pserverhost'] = commands.getoutput('hostname -f')
+if 'serverhost' in tmpSelf.__dict__:
+    tmpSelf.__dict__['pserverhost'] = tmpSelf.__dict__['serverhost']
+    del tmpSelf.__dict__['serverhost']
+else:
+    tmpSelf.__dict__['pserverhost'] = commands.getoutput('hostname -f')
+if 'serverhostssl' in tmpSelf.__dict__:
+    tmpSelf.__dict__['pserverhostssl'] = tmpSelf.__dict__['serverhostssl']
+    del tmpSelf.__dict__['serverhostssl']
+else:
+    tmpSelf.__dict__['pserverhostssl'] = commands.getoutput('hostname -f')
 
 # set port for http
 if not tmpSelf.__dict__.has_key('pserverporthttp'):

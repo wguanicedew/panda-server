@@ -77,7 +77,7 @@ class FileSpec(object):
 
 
     # return map of values
-    def valuesMap(self,useSeq=False,onlyChanged=False):
+    def valuesMap(self, useSeq=False, onlyChanged=False):
         ret = {}
         for attr in self._attributes:
             if useSeq and self._seqAttrMap.has_key(attr):
@@ -159,11 +159,14 @@ class FileSpec(object):
 
 
     # return expression of bind variables for INSERT
-    def bindValuesExpression(cls,useSeq=False,withMod=False):
+    def bindValuesExpression(cls, useSeq=False, withMod=False, backend='oracle'):
         ret = "VALUES("
         for attr in cls._attributes:
             if useSeq and cls._seqAttrMap.has_key(attr):
-                ret += "%s," % cls._seqAttrMap[attr]
+                if backend == 'mysql':
+                    ret += "%s," % "NULL"
+                else:  # backend == 'oracle'
+                    ret += "%s," % cls._seqAttrMap[attr]
             else:
                 ret += ":%s," % attr
         ret = ret[:-1]

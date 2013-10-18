@@ -10,7 +10,7 @@ class WrappedPickle(object):
         '__builtin__'         : ['object'],
         'datetime'            : ['datetime'],
         'taskbuffer.JobSpec'  : ['JobSpec'],
-        'taskbuffer.FileSpec' : ['FileSpec'],        
+        'taskbuffer.FileSpec' : ['FileSpec'],
         }
 
     # check module and class 
