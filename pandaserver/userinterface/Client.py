@@ -57,6 +57,10 @@ else:
 # bamboo
 baseURLBAMBOO = 'http://pandabamboo.cern.ch:25070/bamboo/bamboo'
 
+#from pandalogger.PandaLogger import PandaLogger
+#from config import panda_config
+#_logger = PandaLogger().getLogger('Client')
+
 
 # get URL
 def _getURL(type,srvID=None):
@@ -109,15 +113,15 @@ class _Curl:
         self.sslCert = ''
         self.sslKey  = ''
         # verbose
-#        self.verbose = False
-        self.verbose = True
+        self.verbose = False
+#        self.verbose = True
 
 
     # GET method
     def get(self,url,data):
         # make command
-#        com = '%s --silent --get' % self.path
-        com = '%s --verbose --get' % self.path
+        com = '%s --silent --get' % self.path
+#        com = '%s --verbose --get' % self.path
         if not self.verifyHost:
             com += ' --insecure'
         elif os.environ.has_key('X509_CERT_DIR'):
@@ -165,8 +169,8 @@ class _Curl:
     # POST method
     def post(self,url,data):
         # make command
-#        com = '%s --silent' % self.path
-        com = '%s --verbose' % self.path
+        com = '%s --silent' % self.path
+#        com = '%s --verbose' % self.path
         if not self.verifyHost:
             com += ' --insecure'
         elif os.environ.has_key('X509_CERT_DIR'):
@@ -206,6 +210,8 @@ class _Curl:
         com += ' %s' % url
         # execute
         if self.verbose:
+#            print 'com=', com
+#            print 'commands:', commands.getoutput('cat %s' % tmpName)
             print com
             print commands.getoutput('cat %s' % tmpName)
         ret = commands.getstatusoutput(com)
@@ -214,6 +220,7 @@ class _Curl:
         if ret[0] != 0:
             ret = (ret[0]%255,ret[1])
         if self.verbose:
+#            print 'Curl.post', 'ret=', ret
             print ret
         return ret
 
@@ -221,8 +228,8 @@ class _Curl:
     # PUT method
     def put(self,url,data):
         # make command
-#        com = '%s --silent' % self.path
-        com = '%s --verbose' % self.path
+        com = '%s --silent' % self.path
+#        com = '%s --verbose' % self.path
         if not self.verifyHost:
             com += ' --insecure'
         elif os.environ.has_key('X509_CERT_DIR'):
@@ -263,7 +270,7 @@ def useWebCache():
 
        args:
        returns:
-    """     
+    """
     global baseURL
     baseURL = re.sub('25080','25085',baseURL)
     global serverURLs
@@ -304,7 +311,8 @@ def submitJobs(jobs,srvID=None,toPending=False):
     if toPending:
         data['toPending'] = True
     status,output = curl.post(url,data)
-    if status!=0:
+#    print 'submitJobs:307', 'status=', status
+    if status != 0:
         print output
         return status,output
     try:
