@@ -11582,3 +11582,160 @@ class DBProxy:
             return False
 
 
+    # get HTCondor job with CondorID
+    def isHTCondorJobByCondorID(self, CondorID):
+        """
+            isHTCondorJobByCondorID
+            args:
+                CondorID: CondorID of a HTCondorJobSpec
+            returns:
+                True  ... HTCondor job exists in DB
+                False ... HTCondor job does not exist in DB
+        """
+        comment = ' /* DBProxy.isHTCondorJobByCondorID */'
+        sql1 = "SELECT * FROM ATLAS_PANDA.jobshtcondor WHERE CondorID = :CondorID"
+        try:
+            # begin transaction
+            self.conn.begin()
+            # insert
+            varMap = {}
+            varMap[":CondorID"] = CondorID
+            retI = self.cur.execute(sql1 + comment, varMap)
+            res = self.cur.fetchall()
+            # commit
+            if not self._commit():
+                raise RuntimeError, 'Commit error'
+            _logger.debug("isHTCondorJobByCondorID : CondorID:%s amount:%s" % (CondorID, len(res)))
+            return res
+        except:
+            type, value, traceBack = sys.exc_info()
+            _logger.error("isHTCondorJobByCondorID : %s %s" % (type, value))
+            # roll back
+            self._rollback()
+            return []
+
+    # set properties of an HTCondor job
+    def setHTCondorJob(self, jobProperties):
+        """
+            isHTCondorJobByCondorID
+            args:
+                jobProperties: dictionary with HTCondorJobSpecs properties 
+                    to be set. 
+                    CondorID key has to be present in every dictionary.
+            returns:
+                instance of HTCondorJobSpecs
+        """
+        job = type(JobSpecHTCondor, (object,), jobProperties)
+        return job
+
+
+    # update HTCondor job in jobsHTCondor
+    def updateHTCondorJob(self, jobChange):
+        """
+            updateHTCondorJob
+            args:
+                jobChange: dictionary with HTCondorJobSpecs properties 
+                    to be updated. 
+                    CondorID key has to be present in every dictionary.
+            returns:
+                True  ... HTCondor job inserted successfully
+                False ... HTCondor job insert failed
+        """
+        _logger.debug("mark")
+        comment = ' /* DBProxy.updateHTCondorJob */'
+        try:
+            _logger.debug("mark")
+            CondorID = jobChange['CondorID']
+            _logger.debug("mark")
+        except KeyError:
+            _logger.debug("mark")
+            CondorID = None
+            ### if the jobChange dictionary does not contain CondorID, exit
+            return False
+        _logger.debug("mark")
+        jobInstance = self.isHTCondorJobByCondorID(CondorID)
+        _logger.debug("mark")
+        if len(jobInstance) < 1:
+            _logger.debug("mark")
+            ### if there is no job to change in DB, just insert this one
+            job = self.setHTCondorJob(jobChange)
+            _logger.debug("mark")
+            if not self.insertNewHTCondorJob(job):
+                _logger.debug("mark")
+                ### job has not been inserted, exit
+                return False
+            else:
+                _logger.debug("mark")
+                ### job inserted successfully, exit
+                return True
+        else:
+            _logger.debug("mark")
+            ### update existing job
+            jobChangeKeys = jobChange.keys()
+            _logger.debug("mark")
+            try:
+                _logger.debug("mark")
+                iCondorID = jobChangeKeys.index("CondorID")
+                _logger.debug("mark")
+                del jobChangeKeys[iCondorID]
+                _logger.debug("mark")
+            except ValueError:
+                _logger.debug("mark")
+                _logger.error("updateHTCondorJob : job dictionary does not contain CondorID!")
+            except IndexError:
+                _logger.debug("mark")
+                _logger.error("updateHTCondorJob : job dictionary does not contain CondorID!")
+            _logger.debug("mark")
+            varMap = {}
+            _logger.debug("mark")
+            varMap[":CondorID"] = jobChange["CondorID"]
+            _logger.debug("mark")
+            sql1 = "UPDATE ATLAS_PANDA.jobshtcondor "
+            sql1 += "SET "
+            _logger.debug("mark")
+            for k in jobChangeKeys:
+                _logger.debug("mark")
+                key = ":%s" % k
+                _logger.debug("mark")
+                try:
+                    _logger.debug("mark")
+                    value = jobChange[k]
+                    _logger.debug("mark")
+                    varMap[key] = value
+                    _logger.debug("mark")
+                    sql1 += " %(var)s = %(val)s," % ({'var': k, 'val': key})
+                    _logger.debug("mark")
+                except KeyError:
+                    _logger.debug("mark")
+                    value = None
+                    _logger.debug("mark")
+                    _logger.error("updateHTCondorJob : job dictionary does not contain value for key %s!" % (k))
+                _logger.debug("mark")
+            _logger.debug("mark")
+            sql1 = sql1[:-1]
+            _logger.debug("mark")
+            sql1 += " WHERE CondorID=:CondorID "
+            _logger.debug("mark")
+            try:
+                _logger.debug("mark")
+                # begin transaction
+                self.conn.begin()
+                # insert
+                _logger.debug("mark")
+                retI = self.cur.execute(sql1 + comment, varMap)
+                _logger.debug("mark")
+                # commit
+                if not self._commit():
+                    raise RuntimeError, 'Commit error'
+                _logger.debug("updateHTCondorJob : CondorID:%s" % (CondorID))
+                _logger.debug("mark")
+                return True
+            except:
+                _logger.debug("mark")
+                type, value, traceBack = sys.exc_info()
+                _logger.error("updateHTCondorJob : %s %s" % (type, value))
+                # roll back
+                self._rollback()
+                return False
+
+

@@ -296,3 +296,43 @@ def addHTCondorJobs(jobs, srvID=None):
         print errStr
         return EC_Failed,output+'\n'+errStr
 
+
+# add HTCondor jobs
+def updateHTCondorJobs(jobsInfo, srvID=None):
+    """
+        update HTCondor jobs
+        args:
+            jobs: the list of dictionaries with HTCondorJobSpecs properties 
+                    to be updated. 
+                    CondorID key has to be present in every dictionary.
+            srvID: obsoleted  
+        returns:
+            status code
+                0: communication succeeded to the panda server 
+                255: communication failure
+            return code
+                True: request is processed
+                False: not processed
+    """
+    # serialize
+    strJobs = pickle.dumps(jobsInfo)
+    # instantiate curl
+    curl = _Curl()
+    curl.sslCert = _x509()
+    curl.sslKey = _x509()
+    # execute
+    url = _getURL('URLSSL', srvID) + '/updateHTCondorJobs'
+    data = {'jobs':strJobs}
+    status, output = curl.post(url, data)
+    if status != 0:
+        print output
+        return status, output
+    try:
+        return status, pickle.loads(output)
+    except:
+        type, value, traceBack = sys.exc_info()
+        errStr = "ERROR updateHTCondorJobs : %s %s" % (type, value)
+        print errStr
+        return EC_Failed, output + '\n' + errStr
+
+
