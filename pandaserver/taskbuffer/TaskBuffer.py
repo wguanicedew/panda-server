@@ -2333,8 +2333,16 @@ class TaskBuffer:
 
     ### PanDA - HTCondor API
     # store HTCondor Jobs into DB
-    def storeHTCondorJobs(self, jobs, user, joinThr=False, forkSetupper=False, \
-                          fqans=[]):
+    def storeHTCondorJobs(self, jobs, user, fqans=[]):
+        """
+            storeHTCondorJobs
+            args:
+                jobs: list of HTCondorJobSpecs
+                user: DN of the user adding HTCondor job via this API
+                fquans: list of FQANs of the user's proxy
+            returns:
+                pickle of list of tuples (CondorID, PandaID)
+        """
         try:
             _logger.debug("storeHTCondorJobs : start for %s nJobs=%s" % (user, len(jobs)))
             # check quota for priority calculation
@@ -2374,15 +2382,13 @@ class TaskBuffer:
             proxy = self.proxyPool.getProxy()
             # loop over all jobs
             ret = []
-            newJobs = []
-            nRunJob = 0
             for job in jobs:
                 # insert job to DB
                 if not proxy.insertNewHTCondorJob(job):
                     continue
                 else:
                     # append
-                    newJobs.append(job)
+                    ret.append((job.CondorID, job.PandaID,))
             # release DB proxy
             self.proxyPool.putProxy(proxy)
             # return jobIDs

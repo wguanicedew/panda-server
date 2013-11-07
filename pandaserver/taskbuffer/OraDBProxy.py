@@ -11552,6 +11552,14 @@ class DBProxy:
     ### PanDA - HTCondor API
     # insert HTCondor job to jobsHTCondor
     def insertNewHTCondorJob(self, job):
+        """
+            insertNewHTCondorJob
+            args:
+                job: HTCondorJobSpecs
+            returns:
+                True  ... HTCondor job inserted successfully
+                False ... HTCondor job insert failed
+        """
         comment = ' /* DBProxy.insertNewHTCondorJob */'
         sql1 = "INSERT INTO ATLAS_PANDA.jobshtcondor (%s) " % JobSpecHTCondor.columnNames()
         sql1 += JobSpecHTCondor.bindValuesExpression(useSeq=True, backend=self.backend)

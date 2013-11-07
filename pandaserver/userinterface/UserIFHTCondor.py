@@ -44,15 +44,25 @@ class UserIFHTCondor:
         self.taskBuffer = taskBuffer
 
 
-    # submit jobs
+    # add jobs
     def addHTCondorJobs(self, jobsStr, user, host, userFQANs):
+        """
+            addHTCondorJobs
+            args:
+                jobsStr: list of HTCondorJobSpecs
+                user: DN of the user adding HTCondor job via this API
+                host: remote host of the request
+                userFQANs: FQANs of the user's proxy
+            returns:
+                pickle of list of tuples with CondorID and PandaID
+        """
         _logger.debug('mark')
         try:
             _logger.debug('mark')
             # deserialize jobspecs
             jobs = WrappedPickle.loads(jobsStr)
             _logger.debug('mark')
-            _logger.debug("submitJobs %s len:%s FQAN:%s" % (user,len(jobs),str(userFQANs)))
+            _logger.debug("addHTCondorJobs %s len:%s FQAN:%s" % (user, len(jobs), str(userFQANs)))
             maxJobs = 5000
             if len(jobs) > maxJobs:
                 _logger.error("too may jobs more than %s" % maxJobs)
@@ -61,20 +71,16 @@ class UserIFHTCondor:
         except:
             _logger.debug('mark')
             type, value, traceBack = sys.exc_info()
-            _logger.error("submitJobs : %s %s" % (type,value))
+            _logger.error("addHTCondorJobs : %s %s" % (type, value))
             jobs = []
         _logger.debug('mark')
         _logger.debug('jobs= %s' % str(jobs))
         # store jobs
-        ret = self.taskBuffer.storeHTCondorJobs(jobs, user, forkSetupper=True, \
-                                                fqans=userFQANs)
+        ret = self.taskBuffer.storeHTCondorJobs(jobs, user, fqans=userFQANs)
         _logger.debug('mark')
-        _logger.debug("submitJobs %s ->:%s" % (user,len(ret)))
+        _logger.debug("addHTCondorJobs %s ->:%s" % (user, len(ret)))
         # serialize 
         return pickle.dumps(ret)
-
-
-
 
 
 
@@ -116,19 +122,19 @@ def _getDN(req):
     return realDN
 
 
-# check role
-def _isProdRoleATLAS(req):
-    # check role
-    prodManager = False
-    # get FQANs
-    fqans = _getFQAN(req)
-    # loop over all FQANs
-    for fqan in fqans:
-        # check production role
-        for rolePat in ['/atlas/usatlas/Role=production','/atlas/Role=production']:
-            if fqan.startswith(rolePat):
-                return True
-    return False
+## check role
+#def _isProdRoleATLAS(req):
+#    # check role
+#    prodManager = False
+#    # get FQANs
+#    fqans = _getFQAN(req)
+#    # loop over all FQANs
+#    for fqan in fqans:
+#        # check production role
+#        for rolePat in ['/atlas/usatlas/Role=production','/atlas/Role=production']:
+#            if fqan.startswith(rolePat):
+#                return True
+#    return False
 
 
 
@@ -149,8 +155,15 @@ def isSecure(req):
     return True
 
 
-# submit jobs
+# add jobs
 def addHTCondorJobs(req, jobs):
+    """
+        addHTCondorJobs
+        args:
+            jobs: the list of HTCondorJobSpecs
+        returns:
+            response of userIF.addHTCondorJobs
+    """
     _logger.debug('mark')
     # check security
     if not isSecure(req):
@@ -170,9 +183,6 @@ def addHTCondorJobs(req, jobs):
     _logger.debug('mark')
     # hostname
     host = req.get_remote_host()
-    _logger.debug('mark')
-    # production Role
-    prodRole = _isProdRoleATLAS(req)
     _logger.debug('mark')
     return userIF.addHTCondorJobs(jobs, user, host, fqans)
 
