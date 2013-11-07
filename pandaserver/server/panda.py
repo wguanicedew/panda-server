@@ -162,6 +162,11 @@ allowedMethods += ['submitJobs', 'getJobStatus', 'queryPandaIDs', 'killJobs', 'r
                    'insertSandboxFileInfo', 'checkSandboxFile', 'changeJobPriorities', 'insertTaskParams',
                    'killTask', 'checkSandboxFileEC2']
 
+# API for HTCondor
+from userinterface.UserIFHTCondor import addHTCondorJobs
+allowedMethods += ['addHTCondorJobs']
+
+
 # import error
 import taskbuffer.ErrorCode
 

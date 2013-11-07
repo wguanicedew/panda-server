@@ -47,6 +47,9 @@ from CloudTaskSpec import CloudTaskSpec
 from config import panda_config
 from brokerage.PandaSiteIDs import PandaSiteIDs
 
+from JobSpecHTCondor import JobSpecHTCondor
+
+
 warnings.filterwarnings('ignore')
 
 
@@ -11546,5 +11549,28 @@ class DBProxy:
             return False,'failed to register command'
 
 
+    ### PanDA - HTCondor API
+    # insert HTCondor job to jobsHTCondor
+    def insertNewHTCondorJob(self, job):
+        comment = ' /* DBProxy.insertNewHTCondorJob */'
+        sql1 = "INSERT INTO ATLAS_PANDA.jobshtcondor (%s) " % JobSpecHTCondor.columnNames()
+        sql1 += JobSpecHTCondor.bindValuesExpression(useSeq=True, backend=self.backend)
+        try:
+            # begin transaction
+            self.conn.begin()
+            # insert
+            varMap = job.valuesMap(useSeq=True)
+            retI = self.cur.execute(sql1 + comment, varMap)
+            # commit
+            if not self._commit():
+                raise RuntimeError, 'Commit error'
+            _logger.debug("insertNewHTCondorJob : CondorID:%s PandaID:%s " % (job.CondorID, job.PandaID))
+            return True
+        except:
+            type, value, traceBack = sys.exc_info()
+            _logger.error("insertNewHTCondorJob : %s %s" % (type, value))
+            # roll back
+            self._rollback()
+            return False
 
 

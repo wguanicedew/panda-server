@@ -2331,6 +2331,69 @@ class TaskBuffer:
         return ret
 
 
+    ### PanDA - HTCondor API
+    # store HTCondor Jobs into DB
+    def storeHTCondorJobs(self, jobs, user, joinThr=False, forkSetupper=False, \
+                          fqans=[]):
+        try:
+            _logger.debug("storeHTCondorJobs : start for %s nJobs=%s" % (user, len(jobs)))
+            # check quota for priority calculation
+            weight = 0.0
+            userJobID = -1
+            userJobsetID = -1
+            userStatus = True
+            priorityOffset = 0
+            userVO = 'atlas'
+            userCountry = None
+            useExpress = False
+            nExpressJobs = 0
+            useDebugMode = False
+            # check ban user except internally generated jobs
+            if len(jobs) > 0:
+                # get DB proxy
+                proxy = self.proxyPool.getProxy()
+                # check user status
+                tmpStatus = proxy.checkBanUser(dn=user, sourceLabel='htcondor')
+                # release proxy
+                self.proxyPool.putProxy(proxy)
+                # return if DN is blocked
+                if not tmpStatus:
+                    _logger.debug("storeHTCondorJobs : end for %s DN is blocked 1" % user)
+                    return []
+            # return if DN is blocked
+            if not userStatus:
+                _logger.debug("storeHTCondorJobs : end for %s DN is blocked 2" % user)
+                return []
+            # extract VO
+            for tmpFQAN in fqans:
+                match = re.search('^/([^/]+)/', tmpFQAN)
+                if match != None:
+                    userVO = match.group(1)
+                    break
+            # get DB proxy
+            proxy = self.proxyPool.getProxy()
+            # loop over all jobs
+            ret = []
+            newJobs = []
+            nRunJob = 0
+            for job in jobs:
+                # insert job to DB
+                if not proxy.insertNewHTCondorJob(job):
+                    continue
+                else:
+                    # append
+                    newJobs.append(job)
+            # release DB proxy
+            self.proxyPool.putProxy(proxy)
+            # return jobIDs
+            _logger.debug("storeHTCondorJobs : end for %s succeeded" % user)
+            return ret
+        except:
+            errType, errValue = sys.exc_info()[:2]
+            _logger.error("storeHTCondorJobs : %s %s" % (errType, errValue))
+            return "ERROR: ServerError with storeHTCondorJobs"
+
+
 # Singleton
 taskBuffer = TaskBuffer()
 
