@@ -163,9 +163,9 @@ allowedMethods += ['submitJobs', 'getJobStatus', 'queryPandaIDs', 'killJobs', 'r
                    'killTask', 'checkSandboxFileEC2']
 
 # API for HTCondor
-from userinterface.UserIFHTCondor import addHTCondorJobs, updateHTCondorJobs
-allowedMethods += ['addHTCondorJobs', 'updateHTCondorJobs'
-                   ]
+from userinterface.UserIFHTCondor import addHTCondorJobs, updateHTCondorJobs, \
+        removeHTCondorJobs
+allowedMethods += ['addHTCondorJobs', 'updateHTCondorJobs', 'removeHTCondorJobs']
 
 
 # import error

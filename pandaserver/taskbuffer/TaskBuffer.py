@@ -2400,7 +2400,7 @@ class TaskBuffer:
             return "ERROR: ServerError with storeHTCondorJobs"
 
 
-    # update HTCondor Jobs into DB
+    # update HTCondor Jobs in DB
     def updateHTCondorJobs(self, jobs, user, fqans=[]):
         """
             updateHTCondorJobs
@@ -2481,6 +2481,87 @@ class TaskBuffer:
             errType, errValue = sys.exc_info()[:2]
             _logger.error("updateHTCondorJobs : %s %s" % (errType, errValue))
             return "ERROR: ServerError with updateHTCondorJobs"
+
+
+    # remove HTCondor Jobs in DB
+    def removeHTCondorJobs(self, jobs, user, fqans=[]):
+        """
+            removeHTCondorJobs
+            args:
+                jobs: the list of CondorIDs of HTCondor jobs to be removed
+                user: DN of the user adding HTCondor job via this API
+                fquans: list of FQANs of the user's proxy
+            returns:
+                pickle of list of tuples (CondorID, PandaID) of updated jobs
+        """
+        try:
+            _logger.debug("removeHTCondorJobs : start for %s nJobs=%s" % (user, len(jobs)))
+            _logger.debug("mark")
+            # check quota for priority calculation
+            weight = 0.0
+            userJobID = -1
+            userJobsetID = -1
+            userStatus = True
+            priorityOffset = 0
+            userVO = 'atlas'
+            userCountry = None
+            useExpress = False
+            nExpressJobs = 0
+            useDebugMode = False
+            _logger.debug("mark")
+            # check ban user except internally generated jobs
+            if len(jobs) > 0:
+                # get DB proxy
+                proxy = self.proxyPool.getProxy()
+                # check user status
+                tmpStatus = proxy.checkBanUser(dn=user, sourceLabel='htcondor')
+                # release proxy
+                self.proxyPool.putProxy(proxy)
+                # return if DN is blocked
+                if not tmpStatus:
+                    _logger.debug("removeHTCondorJobs : end for %s DN is blocked 1" % user)
+                    return []
+            _logger.debug("mark")
+            # return if DN is blocked
+            if not userStatus:
+                _logger.debug("removeHTCondorJobs : end for %s DN is blocked 2" % user)
+                return []
+            _logger.debug("mark")
+            # extract VO
+            for tmpFQAN in fqans:
+                match = re.search('^/([^/]+)/', tmpFQAN)
+                if match != None:
+                    userVO = match.group(1)
+                    break
+            _logger.debug("mark")
+            # get DB proxy
+            proxy = self.proxyPool.getProxy()
+            _logger.debug("mark")
+            # loop over all jobs
+            ret = []
+            _logger.debug("mark")
+            for job in jobs:
+                _logger.debug("mark")
+                # update job in DB
+                if not proxy.removeHTCondorJob(job):
+                    _logger.debug("mark")
+                    continue
+                else:
+                    _logger.debug("mark")
+                    # append
+                    ret.append((job,))
+                    _logger.debug("mark")
+            _logger.debug("mark")
+            # release DB proxy
+            self.proxyPool.putProxy(proxy)
+            _logger.debug("mark")
+            # return jobIDs
+            _logger.debug("removeHTCondorJobs : end for %s succeeded" % user)
+            return ret
+        except:
+            errType, errValue = sys.exc_info()[:2]
+            _logger.error("removeHTCondorJobs : %s %s" % (errType, errValue))
+            return "ERROR: ServerError with removeHTCondorJobs"
 
 
 

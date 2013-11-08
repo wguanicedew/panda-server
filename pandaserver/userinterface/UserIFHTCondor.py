@@ -100,8 +100,7 @@ class UserIFHTCondor:
         _logger.debug('mark')
         try:
             _logger.debug('mark')
-            # deserialize jobspecs
-#            jobs = WrappedPickle.loads(jobsStr)
+            # deserialize list of dictionaries
             jobs = pickle.loads(jobsStr)
             _logger.debug('mark')
             _logger.debug("updateHTCondorJobs %s len:%s FQAN:%s" % (user, len(jobs), str(userFQANs)))
@@ -121,6 +120,45 @@ class UserIFHTCondor:
         ret = self.taskBuffer.updateHTCondorJobs(jobs, user, fqans=userFQANs)
         _logger.debug('mark')
         _logger.debug("updateHTCondorJobs %s ->:%s" % (user, len(ret)))
+        # serialize
+        return pickle.dumps(ret)
+
+
+    # remove jobs
+    def removeHTCondorJobs(self, jobsStr, user, host, userFQANs):
+        """
+            removeHTCondorJobs
+            args:
+                jobsStr: the list of CondorIDs of HTCondor jobs to be removed
+                user: DN of the user adding HTCondor job via this API
+                host: remote host of the request
+                userFQANs: FQANs of the user's proxy
+            returns:
+                pickle of list of tuples with CondorID and PandaID
+        """
+        _logger.debug('mark')
+        try:
+            _logger.debug('mark')
+            # deserialize list of strings
+            jobs = pickle.loads(jobsStr)
+            _logger.debug('mark')
+            _logger.debug("removeHTCondorJobs %s len:%s FQAN:%s" % (user, len(jobs), str(userFQANs)))
+            maxJobs = 5000
+            if len(jobs) > maxJobs:
+                _logger.error("too many jobs %s, more than %s" % (len(jobs), maxJobs))
+                jobs = jobs[:maxJobs]
+            _logger.debug('mark')
+        except:
+            _logger.debug('mark')
+            type, value, traceBack = sys.exc_info()
+            _logger.error("removeHTCondorJobs : %s %s" % (type, value))
+            jobs = []
+        _logger.debug('mark')
+        _logger.debug('jobs= %s' % str(jobs))
+        # store jobs
+        ret = self.taskBuffer.removeHTCondorJobs(jobs, user, fqans=userFQANs)
+        _logger.debug('mark')
+        _logger.debug("removeHTCondorJobs %s ->:%s" % (user, len(ret)))
         # serialize
         return pickle.dumps(ret)
 
@@ -237,7 +275,7 @@ def updateHTCondorJobs(req, jobs):
                     to be updated. 
                     CondorID key has to be present in every dictionary.
         returns:
-            response of userIF.addHTCondorJobs
+            response of userIF.updateHTCondorJobs
     """
     _logger.debug('mark')
     # check security
@@ -260,5 +298,37 @@ def updateHTCondorJobs(req, jobs):
     host = req.get_remote_host()
     _logger.debug('mark')
     return userIF.updateHTCondorJobs(jobs, user, host, fqans)
+
+
+# remove jobs
+def removeHTCondorJobs(req, jobs):
+    """
+        removeHTCondorJobs
+        args:
+            jobs: the list of CondorIDs of HTCondor jobs to be removed
+        returns:
+            response of userIF.removeHTCondorJobs
+    """
+    _logger.debug('mark')
+    # check security
+    if not isSecure(req):
+        _logger.debug('mark')
+        return False
+    _logger.debug('mark')
+    # get DN
+    user = None
+    _logger.debug('mark')
+    if req.subprocess_env.has_key('SSL_CLIENT_S_DN'):
+        _logger.debug('mark')
+        user = _getDN(req)
+        _logger.debug('mark')
+    _logger.debug('mark')
+    # get FQAN
+    fqans = _getFQAN(req)
+    _logger.debug('mark')
+    # hostname
+    host = req.get_remote_host()
+    _logger.debug('mark')
+    return userIF.removeHTCondorJobs(jobs, user, host, fqans)
 
 
