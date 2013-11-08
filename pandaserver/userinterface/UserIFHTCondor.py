@@ -13,7 +13,7 @@ import jobdispatcher.Protocol as Protocol
 import brokerage.broker
 import taskbuffer.ProcessGroups
 from config import panda_config
-from taskbuffer.JobSpecHTCondor import JobSpecHTCondor
+#from taskbuffer.JobSpecHTCondor import JobSpecHTCondor
 from taskbuffer.WrappedPickle import WrappedPickle
 from brokerage.SiteMapper import SiteMapper
 from pandalogger.PandaLogger import PandaLogger
@@ -49,7 +49,8 @@ class UserIFHTCondor:
         """
             addHTCondorJobs
             args:
-                jobsStr: list of HTCondorJobSpecs
+#                jobsStr: list of HTCondorJobSpecs
+                jobsStr: list of dictionaries with HTCondor job properties
                 user: DN of the user adding HTCondor job via this API
                 host: remote host of the request
                 userFQANs: FQANs of the user's proxy
@@ -57,8 +58,10 @@ class UserIFHTCondor:
                 pickle of list of tuples with CondorID and PandaID
         """
         try:
-            # deserialize jobspecs
-            jobs = WrappedPickle.loads(jobsStr)
+#            # deserialize jobspecs
+#            jobs = WrappedPickle.loads(jobsStr)
+            # deserialize list of dictionaries
+            jobs = pickle.loads(jobsStr)
             _logger.debug("addHTCondorJobs %s len:%s FQAN:%s" % (user, len(jobs), str(userFQANs)))
             maxJobs = 5000
             if len(jobs) > maxJobs:
@@ -115,7 +118,7 @@ class UserIFHTCondor:
         """
             removeHTCondorJobs
             args:
-                jobsStr: the list of CondorIDs of HTCondor jobs to be removed
+                jobsStr: the list of dict with CondorIDs of HTCondor jobs to be removed
                 user: DN of the user adding HTCondor job via this API
                 host: remote host of the request
                 userFQANs: FQANs of the user's proxy
@@ -123,7 +126,7 @@ class UserIFHTCondor:
                 pickle of list of tuples with CondorID and PandaID
         """
         try:
-            # deserialize list of strings
+            # deserialize list of dict
             jobs = pickle.loads(jobsStr)
             _logger.debug("removeHTCondorJobs %s len:%s FQAN:%s" % (user, len(jobs), str(userFQANs)))
             maxJobs = 5000

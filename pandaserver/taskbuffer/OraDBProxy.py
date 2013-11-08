@@ -47,8 +47,6 @@ from CloudTaskSpec import CloudTaskSpec
 from config import panda_config
 from brokerage.PandaSiteIDs import PandaSiteIDs
 
-from JobSpecHTCondor import JobSpecHTCondor
-
 
 warnings.filterwarnings('ignore')
 
@@ -11555,24 +11553,39 @@ class DBProxy:
         """
             insertNewHTCondorJob
             args:
-                job: HTCondorJobSpecs
+                job: dict with a HTCondor Job properties 
             returns:
                 True  ... HTCondor job inserted successfully
                 False ... HTCondor job insert failed
         """
         comment = ' /* DBProxy.insertNewHTCondorJob */'
-        sql1 = "INSERT INTO ATLAS_PANDA.jobshtcondor (%s) " % JobSpecHTCondor.columnNames()
-        sql1 += JobSpecHTCondor.bindValuesExpression(useSeq=True, backend=self.backend)
+        sql1 = "INSERT INTO ATLAS_PANDA.jobshtcondor "
+        jobKeys = job.keys()
+        varMap = {}
+        sql1_cols = "  "
+        sql1_vals = "  "
+        for k in jobKeys:
+            key = ":%s" % k
+            try:
+                value = job[k]
+                varMap[key] = value
+                sql1_cols += " %(var)s," % ({'var': k})
+                sql1_vals += " %(val)s," % ({'val': key})
+            except KeyError:
+                value = None
+                _logger.error("insertNewHTCondorJob : job dictionary does not contain value for key %s!" % (k))
+        sql1_cols = sql1_cols[:-1]
+        sql1_vals = sql1_vals[:-1]
+        sql1 += " (%s) VALUES ( %s ) " % (sql1_cols, sql1_vals)
         try:
             # begin transaction
             self.conn.begin()
             # insert
-            varMap = job.valuesMap(useSeq=True)
             retI = self.cur.execute(sql1 + comment, varMap)
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
-            _logger.debug("insertNewHTCondorJob : CondorID:%s PandaID:%s " % (job.CondorID, job.PandaID))
+            _logger.debug("insertNewHTCondorJob : CondorID:%s PandaID:%s " % (job['CondorID'], job['PandaID']))
             return True
         except:
             type, value, traceBack = sys.exc_info()
@@ -11587,7 +11600,7 @@ class DBProxy:
         """
             isHTCondorJobByCondorID
             args:
-                CondorID: CondorID of a HTCondorJobSpec
+                CondorID: CondorID of a HTCondor Job
             returns:
                 True  ... HTCondor job exists in DB
                 False ... HTCondor job does not exist in DB
@@ -11615,27 +11628,12 @@ class DBProxy:
             return []
 
 
-    # set properties of an HTCondor job
-    def setHTCondorJob(self, jobProperties):
-        """
-            isHTCondorJobByCondorID
-            args:
-                jobProperties: dictionary with HTCondorJobSpecs properties 
-                    to be set. 
-                    CondorID key has to be present in every dictionary.
-            returns:
-                instance of HTCondorJobSpecs
-        """
-        job = type(JobSpecHTCondor, (object,), jobProperties)
-        return job
-
-
     # update HTCondor job in jobsHTCondor
     def updateHTCondorJob(self, jobChange):
         """
             updateHTCondorJob
             args:
-                jobChange: dictionary with HTCondorJobSpecs properties 
+                jobChange: dictionary with a HTCondor Job properties 
                     to be updated. 
                     CondorID key has to be present in every dictionary.
             returns:
@@ -11652,8 +11650,7 @@ class DBProxy:
         jobInstance = self.isHTCondorJobByCondorID(CondorID)
         if len(jobInstance) < 1:
             ### if there is no job to change in DB, just insert this one
-            job = self.setHTCondorJob(jobChange)
-            if not self.insertNewHTCondorJob(job):
+            if not self.insertNewHTCondorJob(jobChange):
                 ### job has not been inserted, exit
                 return False
             else:
@@ -11722,7 +11719,7 @@ class DBProxy:
             varMap[":CondorID"] = CondorID
             sql1 = "UPDATE ATLAS_PANDA.jobshtcondor "
             sql1 += "SET REMOVED = 1 "
-            sql1 += "WHERE CondorID=:CondorID "
+            sql1 += "WHERE CondorID = :CondorID "
             try:
                 # begin transaction
                 self.conn.begin()

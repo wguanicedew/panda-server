@@ -2337,7 +2337,7 @@ class TaskBuffer:
         """
             storeHTCondorJobs
             args:
-                jobs: list of HTCondorJobSpecs
+                jobs: list of dict with HTCondor Jobs properties
                 user: DN of the user adding HTCondor job via this API
                 fquans: list of FQANs of the user's proxy
             returns:
@@ -2378,7 +2378,8 @@ class TaskBuffer:
                     continue
                 else:
                     # append
-                    ret.append((job.CondorID, job.PandaID,))
+#                    ret.append((job.CondorID, job.PandaID,))
+                    ret.append((job['CondorID'], job['PandaID'],))
             # release DB proxy
             self.proxyPool.putProxy(proxy)
             # return jobIDs
@@ -2455,7 +2456,7 @@ class TaskBuffer:
         """
             removeHTCondorJobs
             args:
-                jobs: the list of CondorIDs of HTCondor jobs to be removed
+                jobs: the list of dict with CondorIDs of HTCondor jobs to be removed
                 user: DN of the user adding HTCondor job via this API
                 fquans: list of FQANs of the user's proxy
             returns:
@@ -2491,12 +2492,17 @@ class TaskBuffer:
             # loop over all jobs
             ret = []
             for job in jobs:
+                try:
+                    CondorID = job['CondorID']
+                except KeyError:
+                    CondorID = None
+                    _logger.error('Cannot find CondorID in %s' % (job))
                 # update job in DB
-                if not proxy.removeHTCondorJob(job):
+                if not proxy.removeHTCondorJob(CondorID):
                     continue
                 else:
                     # append
-                    ret.append((job,))
+                    ret.append((CondorID,))
             # release DB proxy
             self.proxyPool.putProxy(proxy)
             # return jobIDs
