@@ -2378,7 +2378,6 @@ class TaskBuffer:
                     continue
                 else:
                     # append
-#                    ret.append((job.CondorID, job.PandaID,))
                     ret.append((job['CondorID'], job['PandaID'],))
             # release DB proxy
             self.proxyPool.putProxy(proxy)

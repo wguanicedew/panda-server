@@ -1,8 +1,7 @@
-'''
-client methods for HTCondor API
+"""
+client methods for PanDA - HTCondor API
 
-'''
-
+"""
 import os
 import re
 import sys
@@ -53,11 +52,6 @@ else:
                   'EC2'    : {'URL'    : 'http://pandawms.org:25080/server/panda',
                                'URLSSL' : 'https://pandawms.org:25443/server/panda'},
                   }
-
-#from pandalogger.PandaLogger import PandaLogger
-#from config import panda_config
-#_logger = PandaLogger().getLogger('Client')
-
 
 # get URL
 def _getURL(type,srvID=None):
@@ -113,12 +107,10 @@ class _Curl:
         self.verbose = False
 #        self.verbose = True
 
-
     # GET method
     def get(self,url,data):
         # make command
         com = '%s --silent --get' % self.path
-#        com = '%s --verbose --get' % self.path
         if not self.verifyHost:
             com += ' --insecure'
         elif os.environ.has_key('X509_CERT_DIR'):
@@ -167,7 +159,6 @@ class _Curl:
     def post(self,url,data):
         # make command
         com = '%s --silent' % self.path
-#        com = '%s --verbose' % self.path
         if not self.verifyHost:
             com += ' --insecure'
         elif os.environ.has_key('X509_CERT_DIR'):
@@ -207,8 +198,6 @@ class _Curl:
         com += ' %s' % url
         # execute
         if self.verbose:
-#            print 'com=', com
-#            print 'commands:', commands.getoutput('cat %s' % tmpName)
             print com
             print commands.getoutput('cat %s' % tmpName)
         ret = commands.getstatusoutput(com)
@@ -217,7 +206,6 @@ class _Curl:
         if ret[0] != 0:
             ret = (ret[0]%255,ret[1])
         if self.verbose:
-#            print 'Curl.post', 'ret=', ret
             print ret
         return ret
 
@@ -226,7 +214,6 @@ class _Curl:
     def put(self,url,data):
         # make command
         com = '%s --silent' % self.path
-#        com = '%s --verbose' % self.path
         if not self.verifyHost:
             com += ' --insecure'
         elif os.environ.has_key('X509_CERT_DIR'):
@@ -255,10 +242,10 @@ class _Curl:
         return ret
             
 
-'''
+"""
 Client API
 
-'''
+"""
 
 # add HTCondor jobs
 def addHTCondorJobs(jobs, srvID=None):

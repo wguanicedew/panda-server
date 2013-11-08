@@ -58,8 +58,6 @@ class UserIFHTCondor:
                 pickle of list of tuples with CondorID and PandaID
         """
         try:
-#            # deserialize jobspecs
-#            jobs = WrappedPickle.loads(jobsStr)
             # deserialize list of dictionaries
             jobs = pickle.loads(jobsStr)
             _logger.debug("addHTCondorJobs %s len:%s FQAN:%s" % (user, len(jobs), str(userFQANs)))
