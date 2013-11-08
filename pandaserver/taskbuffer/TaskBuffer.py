@@ -2345,17 +2345,7 @@ class TaskBuffer:
         """
         try:
             _logger.debug("storeHTCondorJobs : start for %s nJobs=%s" % (user, len(jobs)))
-            # check quota for priority calculation
-            weight = 0.0
-            userJobID = -1
-            userJobsetID = -1
             userStatus = True
-            priorityOffset = 0
-            userVO = 'atlas'
-            userCountry = None
-            useExpress = False
-            nExpressJobs = 0
-            useDebugMode = False
             # check ban user except internally generated jobs
             if len(jobs) > 0:
                 # get DB proxy
@@ -2415,19 +2405,7 @@ class TaskBuffer:
         """
         try:
             _logger.debug("updateHTCondorJobs : start for %s nJobs=%s" % (user, len(jobs)))
-            _logger.debug("mark")
-            # check quota for priority calculation
-            weight = 0.0
-            userJobID = -1
-            userJobsetID = -1
             userStatus = True
-            priorityOffset = 0
-            userVO = 'atlas'
-            userCountry = None
-            useExpress = False
-            nExpressJobs = 0
-            useDebugMode = False
-            _logger.debug("mark")
             # check ban user except internally generated jobs
             if len(jobs) > 0:
                 # get DB proxy
@@ -2440,40 +2418,29 @@ class TaskBuffer:
                 if not tmpStatus:
                     _logger.debug("updateHTCondorJobs : end for %s DN is blocked 1" % user)
                     return []
-            _logger.debug("mark")
             # return if DN is blocked
             if not userStatus:
                 _logger.debug("updateHTCondorJobs : end for %s DN is blocked 2" % user)
                 return []
-            _logger.debug("mark")
             # extract VO
             for tmpFQAN in fqans:
                 match = re.search('^/([^/]+)/', tmpFQAN)
                 if match != None:
                     userVO = match.group(1)
                     break
-            _logger.debug("mark")
             # get DB proxy
             proxy = self.proxyPool.getProxy()
-            _logger.debug("mark")
             # loop over all jobs
             ret = []
-            _logger.debug("mark")
             for job in jobs:
-                _logger.debug("mark")
                 # update job in DB
                 if not proxy.updateHTCondorJob(job):
-                    _logger.debug("mark")
                     continue
                 else:
-                    _logger.debug("mark")
                     # append
                     ret.append((job['CondorID'],))
-                    _logger.debug("mark")
-            _logger.debug("mark")
             # release DB proxy
             self.proxyPool.putProxy(proxy)
-            _logger.debug("mark")
             # return jobIDs
             _logger.debug("updateHTCondorJobs : end for %s succeeded" % user)
             return ret
@@ -2496,19 +2463,7 @@ class TaskBuffer:
         """
         try:
             _logger.debug("removeHTCondorJobs : start for %s nJobs=%s" % (user, len(jobs)))
-            _logger.debug("mark")
-            # check quota for priority calculation
-            weight = 0.0
-            userJobID = -1
-            userJobsetID = -1
             userStatus = True
-            priorityOffset = 0
-            userVO = 'atlas'
-            userCountry = None
-            useExpress = False
-            nExpressJobs = 0
-            useDebugMode = False
-            _logger.debug("mark")
             # check ban user except internally generated jobs
             if len(jobs) > 0:
                 # get DB proxy
@@ -2521,40 +2476,29 @@ class TaskBuffer:
                 if not tmpStatus:
                     _logger.debug("removeHTCondorJobs : end for %s DN is blocked 1" % user)
                     return []
-            _logger.debug("mark")
             # return if DN is blocked
             if not userStatus:
                 _logger.debug("removeHTCondorJobs : end for %s DN is blocked 2" % user)
                 return []
-            _logger.debug("mark")
             # extract VO
             for tmpFQAN in fqans:
                 match = re.search('^/([^/]+)/', tmpFQAN)
                 if match != None:
                     userVO = match.group(1)
                     break
-            _logger.debug("mark")
             # get DB proxy
             proxy = self.proxyPool.getProxy()
-            _logger.debug("mark")
             # loop over all jobs
             ret = []
-            _logger.debug("mark")
             for job in jobs:
-                _logger.debug("mark")
                 # update job in DB
                 if not proxy.removeHTCondorJob(job):
-                    _logger.debug("mark")
                     continue
                 else:
-                    _logger.debug("mark")
                     # append
                     ret.append((job,))
-                    _logger.debug("mark")
-            _logger.debug("mark")
             # release DB proxy
             self.proxyPool.putProxy(proxy)
-            _logger.debug("mark")
             # return jobIDs
             _logger.debug("removeHTCondorJobs : end for %s succeeded" % user)
             return ret
@@ -2562,8 +2506,6 @@ class TaskBuffer:
             errType, errValue = sys.exc_info()[:2]
             _logger.error("removeHTCondorJobs : %s %s" % (errType, errValue))
             return "ERROR: ServerError with removeHTCondorJobs"
-
-
 
 
 # Singleton
