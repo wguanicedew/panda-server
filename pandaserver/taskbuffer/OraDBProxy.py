@@ -11585,7 +11585,7 @@ class DBProxy:
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
-            _logger.debug("insertNewHTCondorJob : CondorID:%s PandaID:%s " % (job['CondorID'], job['PandaID']))
+            _logger.debug("insertNewHTCondorJob : GlobalJobID:%s WmsID:%s " % (job['GlobalJobID'], job['WmsID']))
             return True
         except:
             type, value, traceBack = sys.exc_info()
@@ -11595,34 +11595,34 @@ class DBProxy:
             return False
 
 
-    # get HTCondor job with CondorID
-    def isHTCondorJobByCondorID(self, CondorID):
+    # get HTCondor job with GlobalJobID
+    def isHTCondorJobByGlobalJobID(self, GlobalJobID):
         """
-            isHTCondorJobByCondorID
+            isHTCondorJobByGlobalJobID
             args:
-                CondorID: CondorID of a HTCondor Job
+                GlobalJobID: GlobalJobID of a HTCondor Job
             returns:
                 True  ... HTCondor job exists in DB
                 False ... HTCondor job does not exist in DB
         """
-        comment = ' /* DBProxy.isHTCondorJobByCondorID */'
-        sql1 = "SELECT * FROM ATLAS_PANDA.jobshtcondor WHERE CondorID = :CondorID"
+        comment = ' /* DBProxy.isHTCondorJobByGlobalJobID */'
+        sql1 = "SELECT * FROM ATLAS_PANDA.jobshtcondor WHERE GlobalJobID = :GlobalJobID"
         try:
             # begin transaction
             self.conn.begin()
             # insert
             varMap = {}
-            varMap[":CondorID"] = CondorID
+            varMap[":GlobalJobID"] = GlobalJobID
             retI = self.cur.execute(sql1 + comment, varMap)
             res = self.cur.fetchall()
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
-            _logger.debug("isHTCondorJobByCondorID : CondorID:%s amount:%s" % (CondorID, len(res)))
+            _logger.debug("isHTCondorJobByGlobalJobID : GlobalJobID:%s amount:%s" % (GlobalJobID, len(res)))
             return res
         except:
             type, value, traceBack = sys.exc_info()
-            _logger.error("isHTCondorJobByCondorID : %s %s" % (type, value))
+            _logger.error("isHTCondorJobByGlobalJobID : %s %s" % (type, value))
             # roll back
             self._rollback()
             return []
@@ -11635,19 +11635,19 @@ class DBProxy:
             args:
                 jobChange: dictionary with a HTCondor Job properties 
                     to be updated. 
-                    CondorID key has to be present in every dictionary.
+                    GlobalJobID key has to be present in every dictionary.
             returns:
                 True  ... HTCondor job updated successfully
                 False ... HTCondor job updated failed
         """
         comment = ' /* DBProxy.updateHTCondorJob */'
         try:
-            CondorID = jobChange['CondorID']
+            GlobalJobID = jobChange['GlobalJobID']
         except KeyError:
-            CondorID = None
-            ### if the jobChange dictionary does not contain CondorID, exit
+            GlobalJobID = None
+            ### if the jobChange dictionary does not contain GlobalJobID, exit
             return False
-        jobInstance = self.isHTCondorJobByCondorID(CondorID)
+        jobInstance = self.isHTCondorJobByGlobalJobID(GlobalJobID)
         if len(jobInstance) < 1:
             ### if there is no job to change in DB, just insert this one
             if not self.insertNewHTCondorJob(jobChange):
@@ -11660,14 +11660,14 @@ class DBProxy:
             ### update existing job
             jobChangeKeys = jobChange.keys()
             try:
-                iCondorID = jobChangeKeys.index("CondorID")
-                del jobChangeKeys[iCondorID]
+                iGlobalJobID = jobChangeKeys.index("GlobalJobID")
+                del jobChangeKeys[iGlobalJobID]
             except ValueError:
-                _logger.error("updateHTCondorJob : job dictionary does not contain CondorID!")
+                _logger.error("updateHTCondorJob : job dictionary does not contain GlobalJobID!")
             except IndexError:
-                _logger.error("updateHTCondorJob : job dictionary does not contain CondorID!")
+                _logger.error("updateHTCondorJob : job dictionary does not contain GlobalJobID!")
             varMap = {}
-            varMap[":CondorID"] = jobChange["CondorID"]
+            varMap[":GlobalJobID"] = jobChange["GlobalJobID"]
             sql1 = "UPDATE ATLAS_PANDA.jobshtcondor "
             sql1 += "SET "
             for k in jobChangeKeys:
@@ -11680,7 +11680,7 @@ class DBProxy:
                     value = None
                     _logger.error("updateHTCondorJob : job dictionary does not contain value for key %s!" % (k))
             sql1 = sql1[:-1]
-            sql1 += " WHERE CondorID=:CondorID "
+            sql1 += " WHERE GlobalJobID=:GlobalJobID "
             try:
                 # begin transaction
                 self.conn.begin()
@@ -11689,7 +11689,7 @@ class DBProxy:
                 # commit
                 if not self._commit():
                     raise RuntimeError, 'Commit error'
-                _logger.debug("updateHTCondorJob : CondorID:%s" % (CondorID))
+                _logger.debug("updateHTCondorJob : GlobalJobID:%s" % (GlobalJobID))
                 return True
             except:
                 type, value, traceBack = sys.exc_info()
@@ -11700,26 +11700,26 @@ class DBProxy:
 
 
     # remove HTCondor job from jobsHTCondor
-    def removeHTCondorJob(self, CondorID):
+    def removeHTCondorJob(self, GlobalJobID):
         """
             removeHTCondorJob
             args:
-                CondorID: CondorID of the HTCondor job to be removed 
+                GlobalJobID: GlobalJobID of the HTCondor job to be removed 
             returns:
                 True  ... HTCondor job removed successfully
                 False ... HTCondor job removal failed
         """
         comment = ' /* DBProxy.removeHTCondorJob */'
-        jobInstance = self.isHTCondorJobByCondorID(CondorID)
+        jobInstance = self.isHTCondorJobByGlobalJobID(GlobalJobID)
         if len(jobInstance) < 1:
-            ### job with given CondorID does not exist in PanDA DB
+            ### job with given GlobalJobID does not exist in PanDA DB
             return False
         else:
             varMap = {}
-            varMap[":CondorID"] = CondorID
+            varMap[":GlobalJobID"] = GlobalJobID
             sql1 = "UPDATE ATLAS_PANDA.jobshtcondor "
             sql1 += "SET REMOVED = 1 "
-            sql1 += "WHERE CondorID = :CondorID "
+            sql1 += "WHERE GlobalJobID = :GlobalJobID "
             try:
                 # begin transaction
                 self.conn.begin()
@@ -11728,7 +11728,7 @@ class DBProxy:
                 # commit
                 if not self._commit():
                     raise RuntimeError, 'Commit error'
-                _logger.debug("updateHTCondorJob : CondorID:%s" % (CondorID))
+                _logger.debug("updateHTCondorJob : GlobalJobID:%s" % (GlobalJobID))
                 return True
             except:
                 type, value, traceBack = sys.exc_info()

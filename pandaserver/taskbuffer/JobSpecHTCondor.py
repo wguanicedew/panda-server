@@ -5,10 +5,14 @@ job specification of a HTCondor job
 
 class JobSpecHTCondor(object):
     # attributes
-    _attributes = ('PandaID', 'CondorID', 'OWNER', 'SUBMITTED', 'RUN_TIME', 'END_TIME',
-                   'ST', 'PRI', 'SIZE', 'CMD', 'HOST', 'STATUS', 'MANAGER', 'EXECUTABLE',
-                   'GOODPUT', 'CPU_UTIL', 'MBPS', 'READ_', 'WRITE_', 'SEEK', 'XPUT',
-                   'BUFSIZE', 'BLOCKSIZE', 'CPU_TIME')
+    _attributes = ('WmsID', 'GlobalJobID', 'CondorID', 'OWNER', 'SUBMITTED',
+                   'RUN_TIME', 'ST', 'PRI', 'SIZE', 'CMD', 'HOST', 'STATUS',
+                   'MANAGER', 'EXECUTABLE', 'GOODPUT', 'CPU_UTIL', 'MBPS',
+                   'READ_', 'WRITE_', 'SEEK', 'XPUT', 'BUFSIZE', 'BLOCKSIZE',
+                   'CPU_TIME', 'P_START_TIME', 'P_END_TIME', 'P_MODIF_TIME',
+                   'P_FACTORY', 'P_SCHEDD', 'P_DESCRIPTION', 'P_STDOUT',
+                   'P_STDERR'
+                   )
     # slots
 #    __slots__ = _attributes+('Files','_changedAttrs')
     __slots__ = _attributes + ('_changedAttrs',)
@@ -20,16 +24,22 @@ class JobSpecHTCondor(object):
     # mapping between sequence and attr
     _seqAttrMap = {}
     # limit length
-    _limitLength = {'CondorID': 100,
+    _limitLength = {'GlobalJobID': 100,
+                    'CondorID': 100,
                     'OWNER': 60,
-                   'ST': 1,
-                   'CMD': 100,
-                   'HOST': 120,
-                   'STATUS': 11,
-                   'MANAGER': 60,
-                   'EXECUTABLE': 100,
-                   'GOODPUT': 5,
-                   'CPU_UTIL': 6,
+                    'ST': 1,
+                    'CMD': 100,
+                    'HOST': 120,
+                    'STATUS': 11,
+                    'MANAGER': 60,
+                    'EXECUTABLE': 100,
+                    'GOODPUT': 5,
+                    'CPU_UTIL': 6,
+                    'P_FACTORY': 60,
+                    'P_SCHEDD': 60,
+                    'P_DESCRIPTION': 100,
+                    'P_STDOUT': 255,
+                    'P_STDERR': 255,
                     }
 
     # constructor

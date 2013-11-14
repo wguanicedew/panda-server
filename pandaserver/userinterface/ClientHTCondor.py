@@ -291,7 +291,7 @@ def updateHTCondorJobs(jobs, srvID=None):
         args:
             jobs: the list of dictionaries with HTCondorJobSpecs properties 
                     to be updated. 
-                    CondorID key has to be present in every dictionary.
+                    GlobalJobID key has to be present in every dictionary.
             srvID: obsoleted  
         returns:
             status code
@@ -328,7 +328,7 @@ def removeHTCondorJobs(jobs, srvID=None):
     """
         remove HTCondor jobs
         args:
-            jobs: the list of CondorIDs of HTCondor jobs to be removed
+            jobs: the list of GlobalJobIDs of HTCondor jobs to be removed
             srvID: obsoleted
         returns:
             status code
