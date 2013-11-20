@@ -159,7 +159,7 @@ def main(backGround=False):
                     'ssl_cert_file' : '/data/atlpan/hostcert.pem',
                     'ssl_key_file'  : '/data/atlpan/hostkey.pem'}
         # resolve multiple brokers
-        brokerList = socket.gethostbyname_ex('gridmsg007.cern.ch')[-1]
+        brokerList = socket.gethostbyname_ex('dashb-test-mb.cern.ch')[-1]
         # set listener
         for tmpBroker in brokerList:
             try:
