@@ -21,11 +21,13 @@ except:
 try:
     baseURL = os.environ['PANDA_URL']
 except:
-    baseURL = 'http://pandaserver.cern.ch:25080/server/panda'
+#    baseURL = 'http://pandaserver.cern.ch:25080/server/panda'
+    baseURL = 'http://pandawms.org:25080/server/panda'
 try:
     baseURLSSL = os.environ['PANDA_URL_SSL']
 except:
-    baseURLSSL = 'https://pandaserver.cern.ch:25443/server/panda'
+#    baseURLSSL = 'https://pandaserver.cern.ch:25443/server/panda'
+    baseURLSSL = 'https://pandawms.org:25443/server/panda'
 
 
 # exit code
@@ -52,6 +54,8 @@ else:
                                'URLSSL' : baseURLSSL},
                   'CERN'    : {'URL'    : 'http://pandaserver.cern.ch:25080/server/panda',
                                'URLSSL' : 'https://pandaserver.cern.ch:25443/server/panda'},
+                  'OSG'     : {'URL'    : 'http://pandawms.org:25080/server/panda',
+                              'URLSSL'  : 'https://pandawms.org:25443/server/panda'},
                   }
 
 # bamboo
