@@ -104,7 +104,7 @@ class TaskBuffer:
     
     # store Jobs into DB
     def storeJobs(self,jobs,user,joinThr=False,forkSetupper=False,fqans=[],hostname='',resetLocInSetupper=False,
-                  checkSpecialHandling=True,toPending=False):
+                  checkSpecialHandling=True, toPending=False, userVO='atlas'):
         try:
             _logger.debug("storeJobs : start for %s nJobs=%s" % (user,len(jobs)))
             # check quota for priority calculation
@@ -113,7 +113,8 @@ class TaskBuffer:
             userJobsetID   = -1
             userStatus     = True
             priorityOffset = 0
-            userVO         = 'atlas'
+#            userVO         = 'atlas'
+            userVO = userVO
             userCountry    = None
             useExpress     = False
             nExpressJobs   = 0

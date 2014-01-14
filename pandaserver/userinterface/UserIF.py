@@ -74,9 +74,23 @@ class UserIF:
         # reject injection for bad prodSourceLabel
         if not goodProdSourceLabel:
             return "ERROR: production role is required for production jobs"
+        # get user VO
+        userVO = 'atlas'
+        if len(jobs):
+            try:
+                job0 = jobs[0]
+            except:
+                errType, errValue = sys.exc_info()[:2]
+                _logger.error("submitJobs : checking userVO: jobs[0] does not exist... %s %s" % (errType, errValue))
+                job0 = None
+            try:
+                userVO = job0.VO
+            except:
+                errType, errValue = sys.exc_info()[:2]
+                _logger.error("submitJobs : checking userVO: userVO not found, defaulting to %s. %s %s" % (errType, errValue, userVO))
         # store jobs
         ret = self.taskBuffer.storeJobs(jobs,user,forkSetupper=True,fqans=userFQANs,
-                                        hostname=host,toPending=toPending)
+                                        hostname=host, toPending=toPending, userVO=userVO)
         _logger.debug("submitJobs %s ->:%s" % (user,len(ret)))
         # serialize 
         return pickle.dumps(ret)
@@ -950,7 +964,7 @@ def submitJobs(req,jobs,toPending=None):
         toPending = True
     else:
         toPending = False
-    return userIF.submitJobs(jobs,user,host,fqans,prodRole,toPending)
+    return userIF.submitJobs(jobs, user, host, fqans, prodRole, toPending)
 
 
 # run task assignment

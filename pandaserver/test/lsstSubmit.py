@@ -15,7 +15,8 @@ for idx,argv in enumerate(sys.argv):
 
 #site = sys.argv[1]
 #site = 'BNL_CVMFS_1'
-site = 'BNL-LSST'
+#site = 'BNL-LSST'
+site = 'ANALY_BNL-LSST'
 
 datasetName = 'panda.user.jschovan.lsst.%s' % commands.getoutput('uuidgen')
 destName    = None
@@ -29,8 +30,8 @@ job.destinationSE     = destName
 job.currentPriority   = 1000
 job.prodSourceLabel   = 'ptest'
 job.computingSite     = site
-
-job.jobParameters="aaaaa"
+job.jobParameters = ""
+job.VO = "lsst"
 
 fileOL = FileSpec()
 fileOL.lfn = "%s.job.log.tgz" % job.jobName
