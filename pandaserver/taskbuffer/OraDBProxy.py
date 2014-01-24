@@ -182,15 +182,12 @@ class DBProxy:
         _logger.debug("_connectOracle : re=%s" % reconnect)
         # connect
         try:
-            _logger.debug("mark")
 #            self.conn = cx_Oracle.connect(dsn=self.dbhost, user=self.dbuser,
 #                                          password=self.dbpasswd, threaded=True)
             self.conn = WrappedConnection(backend=self.backend, reconnect=reconnect,
                                           dbhost=self.dbhost, dbuser=self.dbuser,
                                           dbpasswd=self.dbpasswd, threaded=True)
-            _logger.debug("mark")
             _logger.debug("conn=" + str(self.conn))
-            _logger.debug("mark")
 #            self.cur = self.conn.cursor()
             self.cur = WrappedCursor(self.conn, \
                         useOtherError=False, \
@@ -200,11 +197,8 @@ class DBProxy:
                         schemanamegris=self.schemanamegris, \
                         schemanamearch=self.schemanamearch \
                         )
-            _logger.debug("mark")
             self.conn.setCursor(self.cur)
-            _logger.debug("mark")
             _logger.debug("cur=" + str(self.cur))
-            _logger.debug("mark")
             try:
                 # use SQL dumper
                 if panda_config.dump_sql:
@@ -242,14 +236,11 @@ class DBProxy:
 #                                   port=self.dbport, connect_timeout=self.dbtimeout, \
 #                                   user=self.dbuser, passwd=self.dbpasswd
 #                                   )
-            _logger.debug("mark")
             self.conn = WrappedConnection(backend=self.backend, dbname=self.dbname,
                                           dbhost=self.dbhost, dbuser=self.dbuser,
                                           dbport=self.dbport, dbtimeout=self.dbtimeout,
                                           dbpasswd=self.dbpasswd, reconnect=reconnect)
-            _logger.debug("mark")
             _logger.debug("conn=" + str(self.conn))
-            _logger.debug("mark")
 #            self.cur = self.conn.cursor()
             self.cur = WrappedCursor(self.conn, \
                         useOtherError=False, \
@@ -259,11 +250,8 @@ class DBProxy:
                         schemanamegris=self.schemanamegris, \
                         schemanamearch=self.schemanamearch \
                         )
-            _logger.debug("mark")
             self.conn.setCursor(self.cur)
-            _logger.debug("mark")
             _logger.debug("cur=" + str(self.cur))
-            _logger.debug("mark")
             try:
                 # use SQL dumper
                 if panda_config.dump_sql:
@@ -9372,7 +9360,6 @@ class DBProxy:
                             faresharePolicy[siteid]['usingType'] = True
                         # using prio
                         if tmpDefItem['priority'] != None:
-                            _logger.debug('mark')
                             faresharePolicy[siteid]['usingPrio'] = True
                         # get list of WG and PG with/without priority
                         if tmpDefItem['priority'] == None:
@@ -9406,7 +9393,6 @@ class DBProxy:
                 _logger.debug('marking exit')
                 _logger.debug('faresharePolicy=' + str(faresharePolicy))
                 return faresharePolicy
-            _logger.debug('mark')
         except:
             errtype,errvalue = sys.exc_info()[:2]
             _logger.error("getFaresharePolicy : %s %s" % (errtype,errvalue))

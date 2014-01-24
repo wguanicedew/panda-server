@@ -5,20 +5,15 @@ import commands
 # exec
 def run(inFile,v_onlyTA):
     import cPickle as pickle
-    print 'ln8'
     try:
         # read Jobs from file
         f = open(inFile)
         jobs = pickle.load(f)
         f.close()
-        print 'ln14'
-        print 'ln15 jobs=' + str([x.valuesMap() for x in jobs])
     except:
-        print 'ln16'
         type, value, traceBack = sys.exc_info()
-        print("aaaa run() : %s %s" % (type, value))
+        print("run() : %s %s" % (type, value))
         return
-    print 'ln21'
     # password
     from config import panda_config
     passwd = panda_config.dbpasswd
@@ -30,13 +25,9 @@ def run(inFile,v_onlyTA):
     taskBuffer.init(panda_config.dbhost,panda_config.dbpasswd,nDBConnection=1)
     # run Setupper
     from dataservice.Setupper import Setupper
-    print 'ln33'
     thr = Setupper(taskBuffer,jobs,onlyTA=v_onlyTA,useNativeDQ2=True)
-    print 'ln35'
     thr.start()
-    print 'ln37'
     thr.join()
-    print 'ln39'
     return
 
 

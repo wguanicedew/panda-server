@@ -4,7 +4,6 @@ setup dataset
 '''
 
 import os
-
 import re
 import sys
 import time
@@ -84,36 +83,25 @@ class Setupper (threading.Thread):
         
     # main
     def run(self):
-        _logger.debug('mark')
         try:
             _logger.debug('%s startRun' % self.timestamp)
             self._memoryCheck()
-            _logger.debug('mark')
             # run main procedure in the same process
-            _logger.debug('mark')
             if not self.forkRun:
-                _logger.debug('mark')
                 if self.jobs != None and len(self.jobs) > 0:
-                    _logger.debug('mark')
                     _logger.debug('%s PandaID:%s type:%s taskID:%s' % (self.timestamp,
                                                              self.jobs[0].PandaID,
                                                              self.jobs[0].prodSourceLabel,
                                                              self.jobs[0].taskID))
-                _logger.debug('mark')
                 # instantiate site mapper
                 self.siteMapper = SiteMapper(self.taskBuffer)
-                _logger.debug('mark')
                 # use native DQ2
                 if self.useNativeDQ2:
-                    _logger.debug('mark')
                     ddm.useDirectDQ2()
-                _logger.debug('mark')
                 # correctLFN
                 self._correctLFN()
-                _logger.debug('mark')
                 # run full Setupper
                 if not self.onlyTA:
-                    _logger.debug('mark')
                     # invoke brokerage
                     _logger.debug('%s brokerSchedule' % self.timestamp)        
                     brokerage.broker.schedule(self.jobs,self.taskBuffer,self.siteMapper,
@@ -123,11 +111,8 @@ class Setupper (threading.Thread):
                     self.removeWaitingJobs()
                     # setup dispatch dataset
                     _logger.debug('%s setupSource' % self.timestamp)        
-                    _logger.debug('mark')
                     self._setupSource()
-                    _logger.debug('mark')
                     # sort by site so that larger subs are created in the next step 
-                    _logger.debug('mark')
                     if self.jobs != [] and self.jobs[0].prodSourceLabel in ['managed','test']:
                         tmpJobMap = {}
                         for tmpJob in self.jobs:
@@ -142,10 +127,8 @@ class Setupper (threading.Thread):
                             tmpJobList += tmpJobMap[tmpSiteKey]
                         # set new list
                         self.jobs = tmpJobList
-                    _logger.debug('mark')
                     # create dataset for outputs and assign destination
                     if self.jobs != [] and self.jobs[0].prodSourceLabel in ['managed','test'] and self.jobs[0].cloud in ['DE']:
-                        _logger.debug('mark')
                         # count the number of jobs per _dis 
                         iBunch = 0
                         prevDisDsName = None
@@ -165,53 +148,36 @@ class Setupper (threading.Thread):
                         iBunch = 0
                         nBunchMax = 50
                         tmpIndexJob = 0
-                        _logger.debug('mark')
                         for nJobsPerDis in nJobsPerDisList:
-                            _logger.debug('mark')
                             # check _dis boundary so that the same _dis doesn't contribute to many _subs
                             if iBunch+nJobsPerDis > nBunchMax:
                                 if iBunch != 0:
                                     self._setupDestination(startIdx=tmpIndexJob,nJobsInLoop=iBunch)
                                     tmpIndexJob += iBunch
                                     iBunch = 0
-                            _logger.debug('mark')
                             # increment        
                             iBunch += nJobsPerDis    
-                        _logger.debug('mark')
                         # remaining
                         if iBunch != 0:
-                            _logger.debug('mark')
                             self._setupDestination(startIdx=tmpIndexJob,nJobsInLoop=iBunch)                            
-                            _logger.debug('mark')
-                        _logger.debug('mark')
                     else:
-                        _logger.debug('mark')
                         # at a burst
                         self._setupDestination()
-                        _logger.debug('mark')
-                    _logger.debug('mark')
                     # make dis datasets for existing files
                     self._makeDisDatasetsForExistingfiles()
-                    _logger.debug('mark')
                     # update jobs
                     _logger.debug('%s updateJobs' % self.timestamp)        
                     self._updateJobs()
-                    _logger.debug('mark')
                     # then subscribe sites distpatchDBlocks. this must be the last method
                     _logger.debug('%s subscribeDistpatchDB' % self.timestamp)        
                     self._subscribeDistpatchDB()
-                    _logger.debug('mark')
                     # dynamic data placement for analysis jobs
                     self._dynamicDataPlacement()
-                    _logger.debug('mark')
                     # pin input datasets
                     self._pinInputDatasets()
-                    _logger.debug('mark')
                     # make subscription for missing
                     self._makeSubscriptionForMissing()
-                    _logger.debug('mark')
             else:
-                _logger.debug('mark')
                 # write jobs to file
                 import os
                 import cPickle as pickle
@@ -219,28 +185,23 @@ class Setupper (threading.Thread):
                 outFile = open(outFileName,'w')
                 pickle.dump(self.jobs,outFile)
                 outFile.close()
-                _logger.debug('mark')
                 # run main procedure in another process because python doesn't release memory
                 com =  'cd %s > /dev/null 2>&1; export HOME=%s; ' % (panda_config.home_dir_cwd,panda_config.home_dir_cwd)
                 com += 'source %s; ' % panda_config.glite_source
                 com += 'env PYTHONPATH=%s:%s:%s %s/python -Wignore %s/dataservice/forkSetupper.py -i %s' % \
                        (panda_config.pandaCommon_dir, panda_config.pandaPython_dir, panda_config.dq2_dir + '/opt/dq2/lib', panda_config.native_python,
                         panda_config.pandaPython_dir,outFileName)
-                _logger.debug('mark')
                 if self.onlyTA:
                     com += " -t"
                 _logger.debug(com)
-                _logger.debug('mark')
                 # exeute
                 status,output = self.taskBuffer.processLimiter.getstatusoutput(com)
-                _logger.debug('mark')
                 _logger.debug("Ret from another process: %s %s" % (status,output))                
-                _logger.debug('mark')
             self._memoryCheck()            
             _logger.debug('%s endRun' % self.timestamp)
         except:
             type, value, traceBack = sys.exc_info()
-            _logger.error(" bbbbbbbbb\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n##############################\n############################## %s run() : %s %s" % (self.timestamp, type, value))
+            _logger.error("%s run() : %s %s" % (self.timestamp, type, value))
         
 
     # make dipatchDBlocks, insert prod/dispatchDBlock to database
@@ -734,9 +695,7 @@ class Setupper (threading.Thread):
                             # create a fake vuidStr
                             vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen')
                         # already failed    
-                        _logger.debug('mark')
                         if destError[dest] != '' and name == originalName:
-                            _logger.debug('mark')
                             break
                         # get vuid
                         _logger.debug('vuidStr=' + str(vuidStr))
@@ -758,9 +717,7 @@ class Setupper (threading.Thread):
                             vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen')
                             _logger.debug('vuidStr=' + str(vuidStr))
                         try:
-                            _logger.debug('mark')
                             exec vuidStr
-                            _logger.debug('mark')
                             # dataset spec
                             ds = DatasetSpec()
                             ds.vuid         = vuid
@@ -769,27 +726,18 @@ class Setupper (threading.Thread):
                             ds.numberfiles  = 0
                             ds.currentfiles = 0
                             ds.status       = 'defined'
-                            _logger.debug('mark')
                             # append
                             datasetList[(name,file.destinationSE,computingSite)] = ds
-                            _logger.debug('mark')
                         except:
-                            _logger.debug('mark')
                             # set status
                             type, value, traceBack = sys.exc_info()
                             _logger.error("_setupDestination() : %s %s" % (type,value))
                             destError[dest] = "Setupper._setupDestination() could not get VUID : %s" % name
-                            _logger.debug('mark')
-                        _logger.debug('mark')
-                    _logger.debug('mark')
-                _logger.debug('mark')
                 # set new destDBlock
                 if newnameList.has_key(dest):
                     file.destinationDBlock = newnameList[dest]
-                _logger.debug('mark')
                 # update job status if failed
                 if destError[dest] != '':
-                    _logger.debug('mark')
                     job.jobStatus = 'failed'
                     job.ddmErrorCode = ErrorCode.EC_Setupper                
                     job.ddmErrorDiag = destError[dest]
