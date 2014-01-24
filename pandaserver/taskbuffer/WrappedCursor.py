@@ -195,13 +195,19 @@ class WrappedCursor(object):
                     f.close()
             except:
                 pass
-            _logger.debug("execute : SQL     %s " % sql)
-            _logger.debug("execute : varDict %s " % newVarDict)
-            print "DEBUG execute : SQL     %s " % sql
-            print "DEBUG execute : varDict %s " % newVarDict
+            _logger.debug("execute : SQL     %s " % str(sql))
+            _logger.debug("execute : varDict %s " % str(newVarDict))
+#            print "DEBUG execute : SQL     %s " % sql
+#            print "DEBUG execute : varDict %s " % newVarDict
+            _logger.debug("execute : mark")
             ret = cur.execute(sql, newVarDict)
+            _logger.debug("execute : mark")
             if returningInto is not None:
+                _logger.debug("execute : mark")
                 ret = self._returningIntoMySQLpost(returningInto, varDict, cur)
+            _logger.debug("execute : mark")
+        _logger.debug("execute : mark")
+        _logger.debug("execute : ret=" + str(ret))
         return ret
 
 

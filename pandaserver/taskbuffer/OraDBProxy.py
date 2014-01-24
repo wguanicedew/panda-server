@@ -9198,7 +9198,10 @@ class DBProxy:
             self.conn.begin()
             # select
             sql  = "SELECT siteid,countryGroup,availableCPU,availableStorage,pledgedCPU,pledgedStorage "
-            sql += "FROM ATLAS_PANDAMETA.schedconfig WHERE countryGroup IS NOT NULL AND siteid LIKE 'ANALY_%' "
+            if self.backend == 'mysql':
+                sql += "FROM ATLAS_PANDAMETA.schedconfig WHERE countryGroup IS NOT NULL AND siteid LIKE 'ANALY_%%' "
+            else:
+                sql += "FROM ATLAS_PANDAMETA.schedconfig WHERE countryGroup IS NOT NULL AND siteid LIKE 'ANALY_%' "
             self.cur.arraysize = 100000
             self.cur.execute(sql+comment)
             res = self.cur.fetchall()
@@ -9260,8 +9263,10 @@ class DBProxy:
             cloudTier1Map = {}
             sqlD = "SELECT name,fairshare,tier1 FROM ATLAS_PANDAMETA.cloudconfig"
             self.cur.arraysize = 100000
+            _logger.debug('sql=' + sqlD)
             self.cur.execute(sqlD+comment)
             res = self.cur.fetchall()
+            _logger.debug('res=' + str(res))
             for cloudName,cloudShare,cloudTier1 in res:
                 try:
                     cloudTier1Map[cloudName] = cloudTier1.split(',')
@@ -9271,9 +9276,14 @@ class DBProxy:
                     cloudShareMap[cloudName] = cloudShare
             # get share per site
             sql  = "SELECT siteid,fairsharePolicy,cloud "
-            sql += "FROM ATLAS_PANDAMETA.schedconfig WHERE NOT siteid LIKE 'ANALY_%' GROUP BY siteid,fairsharePolicy,cloud"
+            if self.backend == 'mysql':
+                sql += "FROM ATLAS_PANDAMETA.schedconfig WHERE siteid NOT LIKE 'ANALY_%%' GROUP BY siteid,fairsharePolicy,cloud"
+            else:
+                sql += "FROM ATLAS_PANDAMETA.schedconfig WHERE NOT siteid LIKE 'ANALY_%' GROUP BY siteid,fairsharePolicy,cloud"
+            _logger.debug('sql=' + sql + comment)
             self.cur.execute(sql+comment)
             res = self.cur.fetchall()
+            _logger.debug('res=' + str(res))
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
@@ -9362,6 +9372,7 @@ class DBProxy:
                             faresharePolicy[siteid]['usingType'] = True
                         # using prio
                         if tmpDefItem['priority'] != None:
+                            _logger.debug('mark')
                             faresharePolicy[siteid]['usingPrio'] = True
                         # get list of WG and PG with/without priority
                         if tmpDefItem['priority'] == None:
@@ -9388,17 +9399,24 @@ class DBProxy:
             _logger.debug("getFaresharePolicy -> %s" % str(faresharePolicy))
             if not getNewMap:
                 self.faresharePolicy = faresharePolicy
+                _logger.debug('marking exit')
+                _logger.debug('faresharePolicy=' + str(faresharePolicy))
                 return
             else:
+                _logger.debug('marking exit')
+                _logger.debug('faresharePolicy=' + str(faresharePolicy))
                 return faresharePolicy
+            _logger.debug('mark')
         except:
             errtype,errvalue = sys.exc_info()[:2]
             _logger.error("getFaresharePolicy : %s %s" % (errtype,errvalue))
             # roll back
             self._rollback()
             if not getNewMap:
+                _logger.debug('marking exit')
                 return
             else:
+                _logger.debug('marking exit')
                 return {}
 
 

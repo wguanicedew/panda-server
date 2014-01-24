@@ -276,7 +276,7 @@ def useWebCache():
        returns:
     """
     global baseURL
-    baseURL = re.sub('25080','25085',baseURL)
+#    baseURL = re.sub('25080','25085',baseURL) #FIXME: no cache on pandawms.org!
     global serverURLs
     for tmpKey,tmpVal in serverURLs.iteritems():
         tmpVal['URL'] = baseURL

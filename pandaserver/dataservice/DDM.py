@@ -19,8 +19,14 @@ _env+= 'DQ2_HOME=%s/opt/dq2 ' % panda_config.dq2_dir
 _env+= 'http_proxy=%s '       % panda_config.httpProxy
 _env+= 'https_proxy=%s '      % panda_config.httpProxy
 
-_env+= 'PYTHONPATH=%s/usr/lib/python2.3/site-packages:$PYTHONPATH' \
+#_env+= 'PYTHONPATH=%s/usr/lib/python2.3/site-packages:$PYTHONPATH' \
+#       % panda_config.dq2_dir
+_env += 'PYTHONPATH=%s/opt/dq2/lib:$PYTHONPATH' \
        % panda_config.dq2_dir
+
+f = open('/tmp/DDM.jschovan.log', 'a+')
+f.write("ln25 env: " + str(_env) + '\n')
+f.close()
 
 # method object wrapping DQ2 method
 class _DQMethod:
@@ -70,6 +76,13 @@ class _DQMethod:
         if self.moduleName == 'DQ2_iter':
             com += ";exec 'for item in iter:print item'"
         # execute
+        f = open('/tmp/DDM.jschovan.log', 'a+')
+        f.write('\n')
+        f.write("ln80 _cwd: " + str(_cwd) + '\n')
+        f.write("ln80 _env: " + str(_env) + '\n')
+        f.write("ln80 com: " + str(com) + '\n')
+        f.write('\n')
+        f.close()
         return commands.getstatusoutput('%s env %s python -c "%s"' % (_cwd,_env,com))
         
 

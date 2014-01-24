@@ -83,7 +83,7 @@ class DatasetSpec(object):
 
 
     # return expression of bind values for INSERT
-    def bindValuesExpression(cls):
+    def bindValuesExpression(cls, backend='oracle'):
         ret = "VALUES("
         for attr in cls._attributes:
             ret += ":%s," % attr
