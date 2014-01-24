@@ -37,6 +37,12 @@ _logger = PandaLogger().getLogger('Setupper')
 # temporary
 PandaDDMSource = ['BNLPANDA','BNL-OSG2_MCDISK','BNL-OSG2_DATADISK','BNL-OSG2_MCTAPE','BNL-OSG2_DATATAPE']
 
+# default siteID
+#_defaultSiteID = 'BNL_ATLAS_1'
+#_defaultAnalySiteID = 'ANALY_BNL_ATLAS_1'
+_defaultSiteID = 'BNL-LSST'
+_defaultAnalySiteID = 'ANALY_BNL-LSST'
+
 
 class Setupper (threading.Thread):
     # constructor
@@ -262,7 +268,8 @@ class Setupper (threading.Thread):
             # dispatch datablock
             if job.dispatchDBlock != 'NULL':
                 # src/dst sites
-                tmpSrcID = 'BNL_ATLAS_1'
+#                tmpSrcID = 'BNL_ATLAS_1'
+                tmpSrcID = _defaultSiteID
                 if self.siteMapper.checkCloud(job.cloud):
                     # use cloud's source
                     tmpSrcID = self.siteMapper.getCloud(job.cloud)['source']
@@ -771,7 +778,8 @@ class Setupper (threading.Thread):
             if dispError.has_key(disp) == 0:
                 dispError[disp] = ''
                 # DQ2 IDs
-                tmpSrcID = 'BNL_ATLAS_1'
+#                tmpSrcID = 'BNL_ATLAS_1'
+                tmpSrcID = _defaultSiteID
                 if self.siteMapper.checkCloud(job.cloud):
                     # use cloud's source
                     tmpSrcID = self.siteMapper.getCloud(job.cloud)['source']
@@ -1468,7 +1476,8 @@ class Setupper (threading.Thread):
         missLFNs = {}
         for cloudKey in allLFNs.keys():
             # use BNL by default
-            dq2URL = self.siteMapper.getSite('BNL_ATLAS_1').dq2url
+#            dq2URL = self.siteMapper.getSite('BNL_ATLAS_1').dq2url
+            dq2URL = self.siteMapper.getSite(_defaultSiteID).dq2url
             dq2SE  = []
             # use cloud's source
             if self.siteMapper.checkCloud(cloudKey):

@@ -38,6 +38,12 @@ shortLongMap = {'ANALY_BNL_ATLAS_1':'ANALY_LONG_BNL_ATLAS',
 # processingType to skip brokerage
 skipBrokerageProTypes = ['prod_test']
 
+# default siteID
+#_defaultSiteID = 'BNL_ATLAS_1'
+#_defaultAnalySiteID = 'ANALY_BNL_ATLAS_1'
+_defaultSiteID = 'BNL-LSST'
+_defaultAnalySiteID = 'ANALY_BNL-LSST'
+
 # comparison function for sort
 def _compFunc(jobA,jobB):
     # append site if not in list
@@ -1323,7 +1329,8 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                         if forAnalysis or siteMapper.checkCloud(previousCloud):
                             minSites[scanSiteList[0]] = 0
                         else:
-                            minSites['BNL_ATLAS_1'] = 0
+#                            minSites['BNL_ATLAS_1'] = 0
+                            minSites[_defaultSiteID] = 0
                         # release not found
                         if forAnalysis and trustIS:
                             candidateForAnal = False
@@ -1370,9 +1377,9 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                             resultsForAnalStr = 'ERROR : No candidate. '
                             if resultsForAnal['rel'] != []:
                                 if prevCmtConfig in ['','NULL',None]:
-                                    resultsForAnalStr += 'Release:%s was not found at %s. ' % (prevRelease,str(resultsForAnal['rel']))
+                                    resultsForAnalStr += ' [ln1373] Release:%s was not found at %s. ' % (prevRelease, str(resultsForAnal['rel']))
                                 else:
-                                    resultsForAnalStr += 'Release:%s/%s was not found at %s. ' % (prevRelease,prevCmtConfig,str(resultsForAnal['rel']))
+                                    resultsForAnalStr += ' [ln1375] Release:%s/%s was not found at %s. ' % (prevRelease, prevCmtConfig, str(resultsForAnal['rel']))
                             if resultsForAnal['pilot'] != []:
                                 resultsForAnalStr += '%s are inactive (no pilots for last 3 hours). ' % str(resultsForAnal['pilot'])
                             if resultsForAnal['disk'] != []:
@@ -1437,9 +1444,9 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                                     elif resultsForAnal['scratch'] != []:
                                         tmpJob.brokerageErrorDiag = 'small scratch disk at %s' % tmpJob.computingSite
                                     elif useCacheVersion:
-                                        tmpJob.brokerageErrorDiag = '%s/%s not found at %s' % (tmpJob.homepackage,tmpJob.cmtConfig,tmpJob.computingSite)
+                                        tmpJob.brokerageErrorDiag = ' [ln1440] %s/%s not found at %s' % (tmpJob.homepackage, tmpJob.cmtConfig, tmpJob.computingSite)
                                     else:
-                                        tmpJob.brokerageErrorDiag = '%s/%s not found at %s' % (tmpJob.AtlasRelease,tmpJob.cmtConfig,tmpJob.computingSite)
+                                        tmpJob.brokerageErrorDiag = ' [ln1442] %s/%s not found at %s' % (tmpJob.AtlasRelease, tmpJob.cmtConfig, tmpJob.computingSite)
                                 except:
                                     errtype,errvalue = sys.exc_info()[:2]
                                     tmpLog.error("failed to set diag for %s: %s %s" % (tmpJob.PandaID,errtype,errvalue))
@@ -1453,9 +1460,9 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                                     tmpLog.error("failed to set special diag for %s: %s %s" % (tmpJob.PandaID,errtype,errvalue))
                                     tmpJob.brokerageErrorDiag = 'failed to set diag. see brokerage log in the panda server'
                             elif prevProType in ['reprocessing']:
-                                tmpJob.brokerageErrorDiag = '%s/%s not found at reprocessing sites' % (tmpJob.homepackage,tmpJob.cmtConfig)
+                                tmpJob.brokerageErrorDiag = ' [ln1456] %s/%s not found at reprocessing sites' % (tmpJob.homepackage, tmpJob.cmtConfig)
                             elif not useCacheVersion:
-                                tmpJob.brokerageErrorDiag = '%s/%s not found at online sites with enough memory and disk' % \
+                                tmpJob.brokerageErrorDiag = ' [ln1458] %s/%s not found at online sites with enough memory and disk' % \
                                                             (tmpJob.AtlasRelease,tmpJob.cmtConfig)
                             else:
                                 try:
@@ -1525,13 +1532,16 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                     chosen_ce = siteMapper.getSite(job.computingSite)
                     # if site doesn't exist, use ANALY_BNL_ATLAS_1
                     if job.homepackage.startswith('AnalysisTransforms'):
-                        if chosen_ce.sitename == 'BNL_ATLAS_1':
-                            chosen_ce = siteMapper.getSite('ANALY_BNL_ATLAS_1')
+#                        if chosen_ce.sitename == 'BNL_ATLAS_1':
+                        if chosen_ce.sitename == _defaultSiteID:
+#                            chosen_ce = siteMapper.getSite('ANALY_BNL_ATLAS_1')
+                            chosen_ce = siteMapper.getSite(_defaultAnalySiteID)
                             overwriteSite = True
                 else:
                     # default for Analysis jobs
                     if job.homepackage.startswith('AnalysisTransforms'):
-                        chosen_ce = siteMapper.getSite('ANALY_BNL_ATLAS_1')
+#                        chosen_ce = siteMapper.getSite('ANALY_BNL_ATLAS_1')
+                        chosen_ce = siteMapper.getSite(_defaultAnalySiteID)
                         overwriteSite = True
                     else:
                         # set chosen_ce
