@@ -16,6 +16,9 @@ for idx,argv in enumerate(sys.argv):
 #site = sys.argv[1]
 #site = 'BNL_CVMFS_1'
 #site = 'BNL-LSST'
+### 2014-01-27
+###site = 'ANALY_BNL-LSST'
+###site = 'BNL-LSST'
 site = 'ANALY_BNL-LSST'
 
 datasetName = 'panda.user.jschovan.lsst.%s' % commands.getoutput('uuidgen')
@@ -24,7 +27,8 @@ destName    = None
 job = JobSpec()
 job.jobDefinitionID   = int(time.time()) % 10000
 job.jobName           = "%s" % commands.getoutput('uuidgen')
-job.transformation    = 'http://www.usatlas.bnl.gov/~wenaus/lsst-trf/lsst-trf.sh'
+### job.transformation    = 'http://www.usatlas.bnl.gov/~wenaus/lsst-trf/lsst-trf.sh'
+job.transformation    = 'http://pandawms.org/pandawms-jobcache/lsst-trf.sh'
 job.destinationDBlock = datasetName
 #job.destinationSE     = destName
 job.destinationSE     = 'local' 
@@ -33,7 +37,10 @@ job.currentPriority   = 1000
 #job.prodSourceLabel = 'panda'
 #job.prodSourceLabel = 'ptest'
 #job.prodSourceLabel = 'test'
-job.prodSourceLabel = 'ptest'
+#job.prodSourceLabel = 'ptest'
+### 2014-01-27
+#job.prodSourceLabel = 'user'
+job.prodSourceLabel = 'panda'
 job.computingSite     = site
 job.jobParameters = ""
 job.VO = "lsst"
