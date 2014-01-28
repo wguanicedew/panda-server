@@ -230,8 +230,7 @@ class Setupper (threading.Thread):
                     _logger.debug((self.timestamp,'queryDatasetByName',job.prodDBlock))
                     prodError[job.prodDBlock] = ''
                     for iDDMTry in range(3):
-#                        status,out = ddm.repositoryClient.main('queryDatasetByName',job.prodDBlock)
-                        status, out = (0, 'Faking repositoryClient.queryDatasetByName[' + job.prodDBlock + '] for LSST, not using ATLAS DQ2')
+                        status, out = ddm.repositoryClient.main('queryDatasetByName', job.prodDBlock)
                         if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                or out.find("An error occurred on the central catalogs") != -1 \
                                or out.find("MySQL server has gone away") != -1:
@@ -314,8 +313,7 @@ class Setupper (threading.Thread):
                             else:
                                 for iDDMTry in range(3):
                                     _logger.debug((self.timestamp,'listDatasetReplicas',file.dataset))
-#                                    status,out = ddm.DQ2.main('listDatasetReplicas',file.dataset,0,None,False)
-                                    status, out = (0, 'Faking listDatasetReplicas[' + file.dataset + '] for LSST, not using ATLAS DQ2')
+                                    status, out = ddm.DQ2.main('listDatasetReplicas', file.dataset, 0, None, False)
                                     if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                            or out.find("An error occurred on the central catalogs") != -1 \
                                            or out.find("MySQL server has gone away") != -1 \
@@ -355,9 +353,8 @@ class Setupper (threading.Thread):
                 _logger.debug((self.timestamp,'registerNewDataset',dispatchDBlock,disFiles['lfns'],disFiles['guids'],
                                disFiles['fsizes'],disFiles['chksums'],None,None,None,True))
                 for iDDMTry in range(3):
-#                    status,out = ddm.DQ2.main('registerNewDataset',dispatchDBlock,disFiles['lfns'],disFiles['guids'],
-#                              disFiles['fsizes'],disFiles['chksums'],None,None,None,True)
-                    status, out = (0, 'Faking registerNewDataset[' + dispatchDBlock + '] for LSST, not using ATLAS DQ2')
+                    status, out = ddm.DQ2.main('registerNewDataset', dispatchDBlock, disFiles['lfns'], disFiles['guids'],
+                              disFiles['fsizes'], disFiles['chksums'], None, None, None, True)
                     if status != 0 and out.find('DQDatasetExistsException') != -1:
                         break
                     elif status != 0 or out.find("DQ2 internal server exception") != -1 \
@@ -380,8 +377,7 @@ class Setupper (threading.Thread):
                 time.sleep(1)            
                 _logger.debug((self.timestamp,'freezeDataset',dispatchDBlock))
                 for iDDMTry in range(3):            
-#                    status,out = ddm.DQ2.main('freezeDataset',dispatchDBlock)
-                    status, out = (0, 'Faking freezeDataset[' + dispatchDBlock + '] for LSST, not using ATLAS DQ2')
+                    status, out = ddm.DQ2.main('freezeDataset', dispatchDBlock)
                     if status != 0 or out.find("DQ2 internal server exception") != -1 \
                            or out.find("An error occurred on the central catalogs") != -1 \
                            or out.find("MySQL server has gone away") != -1:
@@ -523,9 +519,8 @@ class Setupper (threading.Thread):
                                 for iDDMTry in range(3):
                                     _logger.debug('os.environ["PATH"]=' + str(os.environ["PATH"]))
                                     _logger.debug('os.environ["PYTHONPATH"]=' + str(os.environ["PYTHONPATH"]))
-#                                    status,out = ddm.DQ2.main('registerNewDataset',name,[],[],[],[],
-#                                                              None,None,None,tmpHiddenFlag)
-                                    status, out = (0, 'Faking registerNewDataset[' + name + '] for LSST, not using ATLAS DQ2')
+                                    status, out = ddm.DQ2.main('registerNewDataset', name, [], [], [], [],
+                                                              None, None, None, tmpHiddenFlag)
                                     _logger.debug('status=' + str(status))
                                     _logger.debug('out=' + str(out))
                                     if status != 0 and out.find('DQDatasetExistsException') != -1:
@@ -559,8 +554,8 @@ class Setupper (threading.Thread):
                                     _logger.debug("%s %s" % (self.timestamp,out))                                
                                     vuidStr = "vuid = %s['vuid']" % out
 
-                                ### Adding fake vuidStr!!! #FIXME
-                                vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen')  #FIXME
+#                                ### Adding fake vuidStr!!! #FIXME
+#                                vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen')  #FIXME
 
                                 # get list of tokens    
                                 tmpTokenList = file.destinationDBlockToken.split(',')
@@ -611,8 +606,7 @@ class Setupper (threading.Thread):
                                     for dq2ID in dq2IDList:
                                         _logger.debug((self.timestamp,'registerDatasetLocation',name,dq2ID,0,0,None,None,None,repLifeTime))
                                         for iDDMTry in range(3):                            
-#                                            status,out = ddm.DQ2.main('registerDatasetLocation',name,dq2ID,0,0,None,None,None,repLifeTime)
-                                            status, out = (0, 'Faking registerDatasetLocation[' + name + '] for LSST, not using ATLAS DQ2')
+                                            status, out = ddm.DQ2.main('registerDatasetLocation', name, dq2ID, 0, 0, None, None, None, repLifeTime)
                                             if status != 0 and out.find('DQLocationExistsException') != -1:
                                                 break
                                             elif status != 0 or out.find("DQ2 internal server exception") != -1 \
@@ -643,8 +637,7 @@ class Setupper (threading.Thread):
                                                         tmpRealDN = out
                                                         _logger.debug((self.timestamp,'setReplicaMetaDataAttribute',name,dq2ID,'owner',tmpRealDN))
                                                         for iDDMTry in range(3):
-#                                                            status,out = ddm.DQ2.main('setReplicaMetaDataAttribute',name,dq2ID,'owner',tmpRealDN)
-                                                            status, out = (0, 'Faking setReplicaMetaDataAttribute[' + name + '] for LSST, not using ATLAS DQ2')
+                                                            status, out = ddm.DQ2.main('setReplicaMetaDataAttribute', name, dq2ID, 'owner', tmpRealDN)
                                                             if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                                                    or out.find("An error occurred on the central catalogs") != -1 \
                                                                    or out.find("MySQL server has gone away") != -1:
@@ -685,8 +678,7 @@ class Setupper (threading.Thread):
                                             dq2ID = self.siteMapper.getSite(file.destinationSE).setokens[tmpFirstToken]
                                     _logger.debug((self.timestamp,'setMetaDataAttribute',name,'origin',dq2ID))
                                     for iDDMTry in range(3):
-#                                        status,out = ddm.DQ2.main('setMetaDataAttribute',name,'origin',dq2ID)
-                                        status, out = (0, 'Faking setMetaDataAttribute[' + name + '] for LSST, not using ATLAS DQ2')
+                                        status, out = ddm.DQ2.main('setMetaDataAttribute', name, 'origin', dq2ID)
                                         if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                                or out.find("An error occurred on the central catalogs") != -1 \
                                                or out.find("MySQL server has gone away") != -1:
@@ -709,8 +701,7 @@ class Setupper (threading.Thread):
                         if vuidStr == '':
                             _logger.debug((self.timestamp,'queryDatasetByName',name))
                             for iDDMTry in range(3):                    
-#                                status,out = ddm.repositoryClient.main('queryDatasetByName',name)
-                                status, out = (0, 'Faking repositoryClient.queryDatasetByName[' + name + '] for LSST, not using ATLAS DQ2')
+                                status, out = ddm.repositoryClient.main('queryDatasetByName', name)
                                 if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                        or out.find("An error occurred on the central catalogs") != -1 \
                                        or out.find("MySQL server has gone away") != -1:
@@ -720,8 +711,8 @@ class Setupper (threading.Thread):
                             _logger.debug("%s %s" % (self.timestamp,out))
                             if status != 0 or out.find('Error') != -1:                                
                                 _logger.error(out)
-#                            vuidStr = "vuid = %s['%s']['vuids'][0]" % (out.split('\n')[0],name) #FIXME
-                            vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen')
+                            vuidStr = "vuid = %s['%s']['vuids'][0]" % (out.split('\n')[0], name)  #FIXME
+#                            vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen') #FIXME
                             _logger.debug('vuidStr=' + str(vuidStr))
                         try:
                             exec vuidStr
@@ -870,8 +861,7 @@ class Setupper (threading.Thread):
                             time.sleep(1)
                             _logger.debug((self.timestamp,'registerDatasetLocation',job.dispatchDBlock,dq2ID,0,1,None,None,None,"7 days"))
                             for iDDMTry in range(3):                                            
-#                                status,out = ddm.DQ2.main('registerDatasetLocation',job.dispatchDBlock,dq2ID,0,1,None,None,None,"7 days")
-                                status, out = (0, 'Faking registerDatasetLocation[' + job.dispatchDBlock + '] for LSST, not using ATLAS DQ2')
+                                status, out = ddm.DQ2.main('registerDatasetLocation', job.dispatchDBlock, dq2ID, 0, 1, None, None, None, "7 days")
                                 if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                        or out.find("An error occurred on the central catalogs") != -1 \
                                        or out.find("MySQL server has gone away") != -1:
@@ -950,11 +940,10 @@ class Setupper (threading.Thread):
                                                         'wait_for_sources':0,'destination':None,'query_more_sources':0,'sshare':"production",'group':None,
                                                         'activity':"Production",'acl_alias':None,'replica_lifetime':"7 days"}))
                         for iDDMTry in range(3):                                                                
-#                            status,out = ddm.DQ2.main('registerDatasetSubscription',job.dispatchDBlock,dq2ID,version=0,archived=0,callbacks=optSub,
-#                                                      sources=optSource,sources_policy=optSrcPolicy,wait_for_sources=0,destination=None,
-#                                                      query_more_sources=0,sshare="production",group=None,activity="Production",
-#                                                      acl_alias=None,replica_lifetime="7 days")
-                            status, out = (0, 'Faking registerDatasetSubscription[' + job.dispatchDBlock + '] for LSST, not using ATLAS DQ2')
+                            status, out = ddm.DQ2.main('registerDatasetSubscription', job.dispatchDBlock, dq2ID, version=0, archived=0, callbacks=optSub,
+                                                      sources=optSource, sources_policy=optSrcPolicy, wait_for_sources=0, destination=None,
+                                                      query_more_sources=0, sshare="production", group=None, activity="Production",
+                                                      acl_alias=None, replica_lifetime="7 days")
                             if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                    or out.find("An error occurred on the central catalogs") != -1 \
                                    or out.find("MySQL server has gone away") != -1:
@@ -1228,8 +1217,7 @@ class Setupper (threading.Thread):
                     time.sleep(1)
                     for iDDMTry in range(3):
                         _logger.debug((self.timestamp,'listFilesInDataset',dataset))
-#                        status,out = ddm.DQ2.main('listFilesInDataset',dataset)
-                        status, out = (0, 'Faking listFilesInDataset[' + dataset + '] for LSST, not using ATLAS DQ2')
+                        status, out = ddm.DQ2.main('listFilesInDataset', dataset)
                         if out.find("DQUnknownDatasetException") != -1:
                             break
                         elif status == -1:
@@ -1294,8 +1282,7 @@ class Setupper (threading.Thread):
                         else:                
                             for iDDMTry in range(3):
                                 _logger.debug((self.timestamp,'listDatasetReplicas',dataset))
-#                                status,out = ddm.DQ2.main('listDatasetReplicas',dataset,0,None,False)
-                                status, out = (0, 'Faking listDatasetReplicas[' + dataset + '] for LSST, not using ATLAS DQ2')
+                                status, out = ddm.DQ2.main('listDatasetReplicas', dataset, 0, None, False)
                                 if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                        or out.find("An error occurred on the central catalogs") != -1 \
                                        or out.find("MySQL server has gone away") != -1 \
@@ -1786,8 +1773,7 @@ class Setupper (threading.Thread):
             return True,self.lfnDatasetMap[dataset]
         for iDDMTry in range(3):
             _logger.debug((self.timestamp,'listFilesInDataset',dataset))
-#            status,out = ddm.DQ2.main('listFilesInDataset',dataset)
-            status, out = (0, 'Faking listFilesInDataset[' + dataset + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('listFilesInDataset', dataset)
             if out.find("DQUnknownDatasetException") != -1:
                 break
             elif status == -1:
@@ -1813,8 +1799,7 @@ class Setupper (threading.Thread):
         # get datasets in container
         _logger.debug((self.timestamp,'listDatasetsInContainer',container))
         for iDDMTry in range(3):
-#            status,out = ddm.DQ2.main('listDatasetsInContainer',container)
-            status, out = (0, 'Faking listDatasetsInContainer[' + container + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('listDatasetsInContainer', container)
             if status != 0 or (not self.isDQ2ok(out)):
                 time.sleep(60)
             else:
@@ -1835,8 +1820,7 @@ class Setupper (threading.Thread):
         # get datasets in container
         _logger.debug((self.timestamp,'listDatasetsInContainer',container))
         for iDDMTry in range(3):
-#            status,out = ddm.DQ2.main('listDatasetsInContainer',container)
-            status, out = (0, 'Faking listDatasetsInContainer[' + container + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('listDatasetsInContainer', container)
             if status != 0 or out.find("DQ2 internal server exception") != -1 \
                    or out.find("An error occurred on the central catalogs") != -1 \
                    or out.find("MySQL server has gone away") != -1 \
@@ -1858,8 +1842,7 @@ class Setupper (threading.Thread):
         for dataset in datasets:
             _logger.debug((self.timestamp,'listDatasetReplicas',dataset))
             for iDDMTry in range(3):
-#                status,out = ddm.DQ2.main('listDatasetReplicas',dataset,0,None,False)
-                status, out = (0, 'Faking listDatasetReplicas[' + dataset + '] for LSST, not using ATLAS DQ2')
+                status, out = ddm.DQ2.main('listDatasetReplicas', dataset, 0, None, False)
                 if status != 0 or out.find("DQ2 internal server exception") != -1 \
                        or out.find("An error occurred on the central catalogs") != -1 \
                        or out.find("MySQL server has gone away") != -1 \
@@ -1911,8 +1894,7 @@ class Setupper (threading.Thread):
         nTry = 3
         for iDDMTry in range(nTry):
             _logger.debug("%s %s/%s listDatasetReplicas %s" % (self.timestamp,iDDMTry,nTry,dataset))
-#            status,out = ddm.DQ2.main('listDatasetReplicas',dataset,0,None,False)
-            status, out = (0, 'Faking listDatasetReplicas[' + dataset + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('listDatasetReplicas', dataset, 0, None, False)
             if status != 0 or (not self.isDQ2ok(out)):
                 time.sleep(60)
             else:
@@ -1955,8 +1937,7 @@ class Setupper (threading.Thread):
             nTry = 3
             for iDDMTry in range(nTry):
                 _logger.debug("%s %s/%s deleteDatasetReplicas %s %s" % (self.timestamp,iDDMTry,nTry,dataset,str(delSites)))
-#                status,out = ddm.DQ2.main('deleteDatasetReplicas',dataset,delSites)
-                status, out = (0, 'Faking deleteDatasetReplicas[' + dataset + '] for LSST, not using ATLAS DQ2')
+                status, out = ddm.DQ2.main('deleteDatasetReplicas', dataset, delSites)
                 if status != 0 or (not self.isDQ2ok(out)):
                     time.sleep(60)
                 else:
@@ -2101,9 +2082,8 @@ class Setupper (threading.Thread):
                         _logger.debug((self.timestamp,'ext registerNewDataset',disDBlock,lfns,guids,fsizes,chksums,
                                        None,None,None,True))
                         for iDDMTry in range(3):
-#                            status,out = ddm.DQ2.main('registerNewDataset',disDBlock,lfns,guids,fsizes,chksums,
-#                                                      None,None,None,True)
-                            status, out = (0, 'Faking registerNewDataset[' + disDBlock + '] for LSST, not using ATLAS DQ2')
+                            status, out = ddm.DQ2.main('registerNewDataset', disDBlock, lfns, guids, fsizes, chksums,
+                                                      None, None, None, True)
                             if status != 0 and out.find('DQDatasetExistsException') != -1:
                                 break
                             elif status != 0 or out.find("DQ2 internal server exception") != -1 \
@@ -2138,8 +2118,7 @@ class Setupper (threading.Thread):
                         # freezeDataset dispatch dataset
                         _logger.debug((self.timestamp,'freezeDataset',disDBlock))
                         for iDDMTry in range(3):            
-#                            status,out = ddm.DQ2.main('freezeDataset',disDBlock)
-                            status, out = (0, 'Faking freezeDataset[' + disDBlock + '] for LSST, not using ATLAS DQ2')
+                            status, out = ddm.DQ2.main('freezeDataset', disDBlock)
                             if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                    or out.find("An error occurred on the central catalogs") != -1 \
                                    or out.find("MySQL server has gone away") != -1:
@@ -2153,8 +2132,7 @@ class Setupper (threading.Thread):
                         # register location
                         _logger.debug((self.timestamp,'registerDatasetLocation',disDBlock,tmpLocation,0,1,None,None,None,"7 days"))
                         for iDDMTry in range(3):
-#                            status,out = ddm.DQ2.main('registerDatasetLocation',disDBlock,tmpLocation,0,1,None,None,None,"7 days")
-                            status, out = (0, 'Faking registerDatasetLocation[' + disDBlock + '] for LSST, not using ATLAS DQ2')
+                            status, out = ddm.DQ2.main('registerDatasetLocation', disDBlock, tmpLocation, 0, 1, None, None, None, "7 days")
                             if status != 0 or out.find("DQ2 internal server exception") != -1 \
                                    or out.find("An error occurred on the central catalogs") != -1 \
                                    or out.find("MySQL server has gone away") != -1:
@@ -2335,11 +2313,10 @@ class Setupper (threading.Thread):
         for iDDMTry in range(nTry):
             # register subscription
             _logger.debug('%s %s/%s registerDatasetSubscription %s %s' % (self.timestamp,iDDMTry,nTry,dataset,dq2ID))
-#            status,out = ddm.DQ2.main('registerDatasetSubscription',dataset,dq2ID,version=0,archived=0,
-#                                      callbacks={},sources={},sources_policy=optSrcPolicy,
-#                                      wait_for_sources=0,destination=None,query_more_sources=0,
-#                                      sshare="production",group=None,activity='Production',acl_alias='secondary')
-            status, out = (0, 'Faking registerDatasetSubscription[' + dataset + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('registerDatasetSubscription', dataset, dq2ID, version=0, archived=0,
+                                      callbacks={}, sources={}, sources_policy=optSrcPolicy,
+                                      wait_for_sources=0, destination=None, query_more_sources=0,
+                                    sshare="production", group=None, activity='Production', acl_alias='secondary')
             status,out = 0,''
             if out.find('DQSubscriptionExistsException') != -1:
                 break
@@ -2369,8 +2346,7 @@ class Setupper (threading.Thread):
         nTry = 3
         for iDDMTry in range(nTry):
             _logger.debug('%s %s/%s listMetaDataReplica %s %s' % (self.timestamp,iDDMTry,nTry,datasetName,locationName))
-#            status,out = ddm.DQ2.main('listMetaDataReplica',locationName,datasetName)
-            status, out = (0, 'Faking listMetaDataReplica[' + locationName + ',' + datasetName + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('listMetaDataReplica', locationName, datasetName)
             if status != 0 or (not self.isDQ2ok(out)):
                 time.sleep(60)
             else:
@@ -2400,8 +2376,7 @@ class Setupper (threading.Thread):
         for iDDMTry in range(nTry):
             _logger.debug('%s %s/%s setReplicaMetaDataAttribute %s %s %s=%s' % (self.timestamp,iDDMTry,nTry,datasetName,
                                                                                 locationName,attrname,attrvalue))
-#            status,out = ddm.DQ2.main('setReplicaMetaDataAttribute',datasetName,locationName,attrname,attrvalue)
-            status, out = (0, 'Faking setReplicaMetaDataAttribute[' + locationName + ',' + datasetName + ',' + attrname + ',' + attrvalue + '] for LSST, not using ATLAS DQ2')
+            status, out = ddm.DQ2.main('setReplicaMetaDataAttribute', datasetName, locationName, attrname, attrvalue)
             if status != 0 or (not self.isDQ2ok(out)):
                 time.sleep(60)
             else:
