@@ -4,6 +4,9 @@
 #
 #
 release_version='0.0.1'
+# prefix = '/data/atlpan/srv'
+prefix = '/data/pansrv/srv'
+
 
 import re
 import sys
@@ -47,7 +50,8 @@ sys.argv = newArgv
 class install_panda(install_org):
     def initialize_options (self):
         install_org.initialize_options(self)
-        self.prefix = '/data/atlpan/srv'
+#        self.prefix = '/data/atlpan/srv'
+        self.prefix = prefix
 
 
 # generates files using templates and install them
