@@ -143,8 +143,10 @@ class WrappedCursor(object):
 #            sql = re.sub("CURRENT_DATE\s*-\s*(\d+|:[^\s\)]+)", "DATE_SUB(CURDATE(),INTERVAL \g<1> DAYS)", sql)
             sql = re.sub("CURRENT_DATE\s*-\s*(\d+|:[^\s\)]+)", "DATE_SUB(CURRENT_DATE,INTERVAL \g<1> DAY)", sql)
 
-#            # CURRENT_DATE
-#            sql = re.sub('CURRENT_DATE', 'CURDATE()', sql)
+            # CURRENT_DATE
+            # replace Oracle's CURRENT_DATE by MySQL's CURRENT_TIMESTAMP,
+            # because default date string format in Oracle differs from that in MySQL
+            sql = re.sub('CURRENT_DATE', 'CURRENT_TIMESTAMP', sql)
 
             # SYSDATE interval
             sql = re.sub("SYSDATE\s*-\s*(\d+|:[^\s\)]+)", "DATE_SUB(SYSDATE,INTERVAL \g<1> DAY)", sql)
