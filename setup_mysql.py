@@ -4,8 +4,8 @@
 #
 #
 release_version='0.0.1'
-# prefix = '/data/atlpan/srv'
-prefix = '/data/pansrv/srv'
+prefix = '/data/atlpan/srv'
+# prefix = '/data/pansrv/srv'
 
 
 import re
