@@ -14,12 +14,11 @@ for idx,argv in enumerate(sys.argv):
         break
 
 #site = sys.argv[1]
-#site = 'BNL_CVMFS_1'
+site = 'ANALY_BNL-LSST'  #orig
 #site = 'BNL-LSST'
-### 2014-01-27
-###site = 'ANALY_BNL-LSST'
-###site = 'BNL-LSST'
-site = 'ANALY_BNL-LSST'
+#site = 'SWT2_CPB-LSST'
+#site = 'UTA_SWT2-LSST'
+#site = 'ANALY_SWT2_CPB-LSST'
 
 datasetName = 'panda.user.jschovan.lsst.%s' % commands.getoutput('uuidgen')
 destName    = None
