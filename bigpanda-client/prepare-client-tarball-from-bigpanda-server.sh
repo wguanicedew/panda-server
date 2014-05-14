@@ -22,10 +22,11 @@ git clone -b ${BRANCH} ${REPOSITORY} ${GITREPODIRNAME}
 cd ${GITREPODIR}/pandaserver
 mkdir -p ${TARBALLDIR}/{taskbuffer,userinterface,test}
 
+cp __init__.py ${TARBALLDIR}
 cp taskbuffer/{__init__,JobSpec,FileSpec}.py ${TARBALLDIR}/taskbuffer/
 cp userinterface/*.py ${TARBALLDIR}/userinterface/
 cp test/* ${TARBALLDIR}/test/
-# TODO: provide README how to setup environment (PYTHONPATH) and how to submit a job
+cp ${GITREPODIR}/bigpanda-client/README.txt ${TARBALLDIR}/
 
 cd ${WRKDIR}/
 tar zcf ${TARBALL} ${TARBALLNAMEBASE}
