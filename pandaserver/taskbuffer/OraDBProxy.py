@@ -5768,23 +5768,13 @@ class DBProxy:
             cloudTask = CloudTaskSpec()
             cloudTask.taskid = tid
             cloudTask.status = 'defined'
-            varMap = {}
             if panda_config.dbengine == 'mysql':
-#                ### fake sequence
-#                sql = " INSERT INTO ATLAS_PANDA.CLOUDTASKS_ID_SEQ (col) VALUES (NULL) "
-#                self.cur.execute(sql + comment, {})
-#                sql2 = """ SELECT LAST_INSERT_ID() """
-#                self.cur.execute(sql2 + comment, {})
-#                nextval, = self.cur.fetchone()
-#                sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(:nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
-#                sql += " RETURNING id INTO :newID"
-#                varMap[':nextval'] = nextval
                 ### fake sequence
                 sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(NULL,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
-                sql += " RETURNING id INTO :newID"
             else:  # panda_config.dbengine == 'oracle':
                 sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(ATLAS_PANDA.CLOUDTASKS_ID_SEQ.nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
-                sql += " RETURNING id INTO :newID"
+            sql += " RETURNING id INTO :newID"
+            varMap = {}
             varMap[':taskid'] = cloudTask.taskid
             varMap[':status'] = cloudTask.status
             try:
@@ -6009,19 +5999,12 @@ class DBProxy:
                     raise RuntimeError, 'Commit error'
                 return "SUCCEEDED"
             # insert new CloudTask
-            varMap = {}
             if panda_config.dbengine == 'mysql':
-#                ### fake sequence
-#                sql = " INSERT INTO ATLAS_PANDA.CLOUDTASKS_ID_SEQ (col) VALUES (NULL) "
-#                self.cur.execute(sql + comment, {})
-#                sql2 = """ SELECT LAST_INSERT_ID() """
-#                self.cur.execute(sql2 + comment, {})
-#                nextval, = self.cur.fetchone()
-#                varMap[':nextval'] = nextval
                 ### fake sequence
                 sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(NULL,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
             else:  # panda_config.dbengine == 'oracle':
                 sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(ATLAS_PANDA.CLOUDTASKS_ID_SEQ.nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
+            varMap = {}
             varMap[':taskid'] = tid
             varMap[':status'] = status
             self.cur.execute(sql+comment, varMap)
