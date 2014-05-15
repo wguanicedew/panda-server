@@ -5584,10 +5584,19 @@ class DBProxy:
                 # use predefined flag
                 freshFlag = definedFreshFlag
             # get serial number
-            sql = "SELECT ATLAS_PANDA.SUBCOUNTER_SUBID_SEQ.nextval FROM dual";
-            self.cur.arraysize = 100
-            self.cur.execute(sql+comment, {})
-            sn, = self.cur.fetchone()
+            if panda_config.dbengine == 'mysql':
+                ### fake sequence
+                sql = " INSERT INTO ATLAS_PANDA.SUBCOUNTER_SUBID_SEQ (col) VALUES (NULL) "
+                self.cur.arraysize = 100
+                self.cur.execute(sql + comment, {})
+                sql2 = """ SELECT LAST_INSERT_ID() """
+                self.cur.execute(sql2 + comment, {})
+                sn, = self.cur.fetchone()
+            else:  # panda_config.dbengine == 'oracle':
+                sql = "SELECT ATLAS_PANDA.SUBCOUNTER_SUBID_SEQ.nextval FROM dual";
+                self.cur.arraysize = 100
+                self.cur.execute(sql + comment, {})
+                sn, = self.cur.fetchone()
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
@@ -5612,9 +5621,18 @@ class DBProxy:
             # start transaction
             self.conn.begin()
             # get serial number
-            sql = "SELECT ATLAS_PANDA.GROUP_JOBID_SEQ.nextval FROM dual";
-            self.cur.execute(sql+comment, {})
-            sn, = self.cur.fetchone()
+            if panda_config.dbengine == 'mysql':
+                ### fake sequence
+                sql = " INSERT INTO ATLAS_PANDA.GROUP_JOBID_SEQ (col) VALUES (NULL) "
+                self.cur.arraysize = 100
+                self.cur.execute(sql + comment, {})
+                sql2 = """ SELECT LAST_INSERT_ID() """
+                self.cur.execute(sql2 + comment, {})
+                sn, = self.cur.fetchone()
+            else:  # panda_config.dbengine == 'oracle':
+                sql = "SELECT ATLAS_PANDA.GROUP_JOBID_SEQ.nextval FROM dual";
+                self.cur.execute(sql + comment, {})
+                sn, = self.cur.fetchone()
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
@@ -5749,10 +5767,24 @@ class DBProxy:
             _logger.debug("insert new CloudTask")
             cloudTask = CloudTaskSpec()
             cloudTask.taskid = tid
-            cloudTask.status = 'defined' 
-            sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(ATLAS_PANDA.CLOUDTASKS_ID_SEQ.nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
-            sql += " RETURNING id INTO :newID"
+            cloudTask.status = 'defined'
             varMap = {}
+            if panda_config.dbengine == 'mysql':
+#                ### fake sequence
+#                sql = " INSERT INTO ATLAS_PANDA.CLOUDTASKS_ID_SEQ (col) VALUES (NULL) "
+#                self.cur.execute(sql + comment, {})
+#                sql2 = """ SELECT LAST_INSERT_ID() """
+#                self.cur.execute(sql2 + comment, {})
+#                nextval, = self.cur.fetchone()
+#                sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(:nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
+#                sql += " RETURNING id INTO :newID"
+#                varMap[':nextval'] = nextval
+                ### fake sequence
+                sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(NULL,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
+                sql += " RETURNING id INTO :newID"
+            else:  # panda_config.dbengine == 'oracle':
+                sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(ATLAS_PANDA.CLOUDTASKS_ID_SEQ.nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
+                sql += " RETURNING id INTO :newID"
             varMap[':taskid'] = cloudTask.taskid
             varMap[':status'] = cloudTask.status
             try:
@@ -5977,8 +6009,19 @@ class DBProxy:
                     raise RuntimeError, 'Commit error'
                 return "SUCCEEDED"
             # insert new CloudTask
-            sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(ATLAS_PANDA.CLOUDTASKS_ID_SEQ.nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
             varMap = {}
+            if panda_config.dbengine == 'mysql':
+#                ### fake sequence
+#                sql = " INSERT INTO ATLAS_PANDA.CLOUDTASKS_ID_SEQ (col) VALUES (NULL) "
+#                self.cur.execute(sql + comment, {})
+#                sql2 = """ SELECT LAST_INSERT_ID() """
+#                self.cur.execute(sql2 + comment, {})
+#                nextval, = self.cur.fetchone()
+#                varMap[':nextval'] = nextval
+                ### fake sequence
+                sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(NULL,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
+            else:  # panda_config.dbengine == 'oracle':
+                sql = "INSERT INTO ATLAS_PANDA.cloudtasks (id,taskid,status,tmod,tenter) VALUES(ATLAS_PANDA.CLOUDTASKS_ID_SEQ.nextval,:taskid,:status,CURRENT_DATE,CURRENT_DATE)"
             varMap[':taskid'] = tid
             varMap[':status'] = status
             self.cur.execute(sql+comment, varMap)
@@ -10201,9 +10244,21 @@ class DBProxy:
             # set autocommit on
             self.conn.begin()
             # construct SQL
-            sql0 = 'INSERT INTO ATLAS_PANDAMETA.proxykey (id,'
-            sql1 = 'VALUES (ATLAS_PANDAMETA.PROXYKEY_ID_SEQ.nextval,'
             vals = {}
+            if panda_config.dbengine == 'mysql':
+                ### fake sequence
+                sql = " INSERT INTO ATLAS_PANDA.PROXYKEY_ID_SEQ (col) VALUES (NULL) "
+                self.cur.arraysize = 100
+                self.cur.execute(sql + comment, {})
+                sql2 = """ SELECT LAST_INSERT_ID() """
+                self.cur.execute(sql2 + comment, {})
+                nextval, = self.cur.fetchone()
+                sql0 = 'INSERT INTO ATLAS_PANDAMETA.proxykey (id,'
+                sql1 = 'VALUES (:nextval,'
+                vals[':nextval'] = nextval
+            else:  # panda_config.dbengine == 'oracle':
+                sql0 = 'INSERT INTO ATLAS_PANDAMETA.proxykey (id,'
+                sql1 = 'VALUES (ATLAS_PANDAMETA.PROXYKEY_ID_SEQ.nextval,'
             for key,val in params.iteritems():
                 sql0 += '%s,'  % key
                 sql1 += ':%s,' % key
@@ -10328,7 +10383,10 @@ class DBProxy:
                     raise RuntimeError, 'Commit error'
                 return res[0]
             # add
-            sql = 'INSERT INTO ATLAS_PANDAMETA.siteaccess (id,dn,pandasite,status,created) VALUES (ATLAS_PANDAMETA.SITEACCESS_ID_SEQ.nextval,:dn,:pandasite,:status,CURRENT_DATE)'
+            if panda_config.dbengine == 'mysql':
+                sql = 'INSERT INTO ATLAS_PANDAMETA.siteaccess (id,dn,pandasite,status,created) VALUES (NULL,:dn,:pandasite,:status,CURRENT_DATE)'
+            else:  # panda_config.dbengine == 'oracle':
+                sql = 'INSERT INTO ATLAS_PANDAMETA.siteaccess (id,dn,pandasite,status,created) VALUES (ATLAS_PANDAMETA.SITEACCESS_ID_SEQ.nextval,:dn,:pandasite,:status,CURRENT_DATE)'
             varMap = {}
             varMap[':dn'] = dn
             varMap[':pandasite'] = siteID
@@ -11471,7 +11529,10 @@ class DBProxy:
             # sql to insert task parameters
             schemaDEFT = self.getSchemaDEFT()
             sqlT  = "INSERT INTO {0}.DEFT_TASK (TASK_ID,TASK_PARAM) VALUES ".format(schemaDEFT)
-            sqlT += "({0}.PRODSYS2_TASK_ID_SEQ.nextval,:param) ".format(schemaDEFT)
+            if panda_config.dbengine == 'mysql':
+                sqlT += "(NULL,:param) "
+            else:  # panda_config.dbengine == 'oracle':
+                sqlT += "({0}.PRODSYS2_TASK_ID_SEQ.nextval,:param) ".format(schemaDEFT)
             sqlT += "RETURNING TASK_ID INTO :jediTaskID"
             # sql to insert command
             sqlC  = "INSERT INTO {0}.PRODSYS_COMM (COMM_TASK,COMM_OWNER,COMM_CMD) ".format(schemaDEFT)
