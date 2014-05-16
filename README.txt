@@ -1,4 +1,4 @@
-Release Note
+Release Note .
 
 current
   * changed TaskBuffer to give high prio to hammercloud-fax 	
