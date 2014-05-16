@@ -88,9 +88,11 @@ class AdderGen:
                 # set job status
                 if not self.job.jobStatus in ['transferring']:
                     self.job.jobStatus = self.jobStatus
+                addResult = None
+                adderPlugin = None
                 # parse XML
                 parseResult = self.parseXML()
-                if parseResult < 2:
+                if parseResult < 2 and self.job.destinationSE != 'local':
                     # instantiate concrete plugin
                     if self.job.VO == 'cms':
                         from AdderCmsPlugin import AdderCmsPlugin
@@ -133,7 +135,7 @@ class AdderGen:
                     self.job.jobDispatcherErrorCode = 0
                     self.job.jobDispatcherErrorDiag = 'NULL'
                     # set status for transferring
-                    if addResult.transferringFiles != []:
+                    if addResult != None and addResult.transferringFiles != []:
                         for file in self.job.Files:
                             if file.lfn in addResult.transferringFiles:
                                 file.status = 'transferring'
