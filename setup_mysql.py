@@ -4,7 +4,6 @@
 #
 #
 from version import __version__
-# release_version='0.0.2'
 prefix = '/data/atlpan/srv'
 # prefix = '/data/pansrv/srv'
 
@@ -16,6 +15,7 @@ import commands
 from distutils.core import setup
 from distutils.command.install import install as install_org
 from distutils.command.install_data import install_data as install_data_org
+
 
 # get panda specific params
 optPanda = {}
@@ -146,7 +146,6 @@ class install_data_panda (install_data_org):
 # setup for distutils
 setup(
     name="panda-server-mysql",
-#    version=release_version,
     version=__version__,
     description='MySQL branch of the PanDA Server Package',
     long_description='''This package contains PanDA Server Components''',
