@@ -1,10 +1,20 @@
 """ 
-    version .
+    version
 """
-version_base = "0.0.2"
-
 import commands
+import ConfigParser
 import os
+
+
+def get_version_base_release_type():
+    """
+        get_version_base ... get version string base from the setup.cfg
+    """
+    config = ConfigParser.ConfigParser()
+    config.read(os.path.dirname(os.path.realpath(__file__)) + '/setup.cfg')
+    version_base = config.get("global", "version")
+    release_type = config.get("global", "release_type")
+    return (version_base, release_type)
 
 
 def get_git_version():
@@ -34,6 +44,17 @@ def get_git_version():
     return str('.dev-' + ncommits + '-' + last_rev_id + '-' + nrevs)
 
 
-__version__ = version_base + get_git_version()
+def get_version():
+    isStable = False
+    version_base, release_type = get_version_base_release_type()
+    if release_type == 'stable':
+        isStable = True
+    __version__ = get_version_base()
+    if not isStable:
+        __version__ += get_git_version()
+    return __version__
+
+
+__version__ = get_version()
 
 
