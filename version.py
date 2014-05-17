@@ -1,5 +1,5 @@
 """ 
-    version .
+    version
 """
 version_base = "0.0.2"
 
