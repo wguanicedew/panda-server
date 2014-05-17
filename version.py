@@ -49,12 +49,11 @@ def get_version():
     version_base, release_type = get_version_base_release_type()
     if release_type == 'stable':
         isStable = True
-    __version__ = get_version_base()
+    __version__ = version_base
     if not isStable:
         __version__ += get_git_version()
     return __version__
 
 
 __version__ = get_version()
-
 
