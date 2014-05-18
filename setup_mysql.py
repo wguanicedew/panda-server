@@ -3,7 +3,7 @@
 # Setup prog for Panda Server
 #
 #
-from version import __version__
+from version import __version__, __provides__
 prefix = '/data/atlpan/srv'
 # prefix = '/data/pansrv/srv'
 
@@ -145,7 +145,8 @@ class install_data_panda (install_data_org):
         
 # setup for distutils
 setup(
-    name="panda-server-mysql",
+#    name="panda-server-mysql",
+    name=__provides__,
     version=__version__,
     description='MySQL branch of the PanDA Server Package',
     long_description='''This package contains PanDA Server Components''',

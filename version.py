@@ -6,7 +6,7 @@ import ConfigParser
 import os
 
 
-def get_version_base_release_type():
+def get_version_base__release_type__provides():
     """
         get_version_base ... get version string base from the setup.cfg
     """
@@ -14,7 +14,8 @@ def get_version_base_release_type():
     config.read(os.path.dirname(os.path.realpath(__file__)) + '/setup.cfg')
     version_base = config.get("global", "version")
     release_type = config.get("global", "release_type")
-    return (version_base, release_type)
+    provides = config.get("bdist_rpm", "provides")
+    return (version_base, release_type, provides,)
 
 
 def get_git_version():
@@ -44,16 +45,19 @@ def get_git_version():
     return str('.dev-' + ncommits + '-' + last_rev_id + '-' + nrevs)
 
 
-def get_version():
+def get_version_provides():
     isStable = False
-    version_base, release_type = get_version_base_release_type()
+    version_base, release_type, provides = get_version_base__release_type__provides()
     if release_type == 'stable':
         isStable = True
     __version__ = version_base
     if not isStable:
         __version__ += get_git_version()
-    return __version__
+    __provides__ = provides
+    return (__version__, __provides__,)
 
 
-__version__ = get_version()
+
+__version__, __provides__ = get_version_provides()
+
 
