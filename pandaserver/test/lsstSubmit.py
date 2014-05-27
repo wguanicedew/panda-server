@@ -81,11 +81,11 @@ destName    = None
 
 if prodUserName is not None \
     and PIPELINE_TASK is not None \
-    and PIPELINE_EXECUTIONNUMBER is not None:
-    datasetName = 'panda.lsst.user.%(PIPELINE_EXECUTIONNUMBER)s.%(PIPELINE_TASK)s.%(prodUserName)s' % \
+    and PIPELINE_PROCESSINSTANCE is not None:
+    datasetName = 'panda.lsst.user.%(PIPELINE_PROCESSINSTANCE)s.%(PIPELINE_TASK)s.%(prodUserName)s' % \
     {'prodUserName': str(prodUserName), \
      'PIPELINE_TASK': str(PIPELINE_TASK), \
-     'PIPELINE_EXECUTIONNUMBER': str(PIPELINE_EXECUTIONNUMBER) \
+     'PIPELINE_PROCESSINSTANCE': str(PIPELINE_PROCESSINSTANCE) \
      }
 else:
     datasetName = 'panda.lsst.user.jschovan.%s' % commands.getoutput('uuidgen')
@@ -94,11 +94,12 @@ if prodUserName is not None \
     and PIPELINE_TASK is not None \
     and PIPELINE_EXECUTIONNUMBER is not None \
     and PIPELINE_STREAM is not None:
-    jobName = 'job.%(PIPELINE_EXECUTIONNUMBER)s.%(PIPELINE_TASK)s.%(prodUserName)s.%(PIPELINE_STREAM)s' % \
+    jobName = 'job.%(PIPELINE_PROCESSINSTANCE)s.%(PIPELINE_TASK)s.%(PIPELINE_EXECUTIONNUMBER)s.%(prodUserName)s.%(PIPELINE_STREAM)s' % \
     {'prodUserName': str(prodUserName), \
      'PIPELINE_TASK': str(PIPELINE_TASK), \
      'PIPELINE_EXECUTIONNUMBER': str(PIPELINE_EXECUTIONNUMBER), \
-     'PIPELINE_STREAM': str(PIPELINE_STREAM) \
+     'PIPELINE_STREAM': str(PIPELINE_STREAM), \
+     'PIPELINE_PROCESSINSTANCE': str(PIPELINE_PROCESSINSTANCE) \
      }
 else:
     jobName = "%s" % commands.getoutput('uuidgen')
