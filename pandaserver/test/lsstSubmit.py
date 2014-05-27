@@ -122,7 +122,7 @@ job.destinationDBlock = datasetName
 job.destinationSE     = 'local' 
 job.currentPriority   = 1000
 job.prodSourceLabel = 'panda'
-job.jobParameters = lsstJobParams + ""
+job.jobParameters = ' --lsstJobParams="%s" ' % lsstJobParams
 if prodUserName is not None:
     job.prodUserName = prodUserName
 if PIPELINE_PROCESSINSTANCE is not None:

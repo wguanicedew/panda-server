@@ -90,10 +90,11 @@ class UserIF:
                 errType, errValue = sys.exc_info()[:2]
                 _logger.error("submitJobs : checking userVO: userVO not found, defaulting to %s. %s %s" % (errType, errValue, userVO))
         # get LSST pipeline username
-        if userVO.lower() == 'lsst':
+        if userVO.lower() == 'lsst' and job0 is not None \
+            and job0.prodUserName is not None and len(job0.prodUserName) \
+            and job0.prodUserName.lower() != 'none':
             try:
-                if job0.prodUserName is not None and len(job0.prodUserName):
-                    user = job0.prodUserName
+                user = job0.prodUserName
             except:
                 _logger.error("submitJobs : checking username for userVO[%s]: username not found, defaulting to %s. %s %s" % (userVO, user))
         # store jobs
@@ -1558,7 +1559,7 @@ def getNUserJobs(req,siteName,nJobs=100):
         # check production role
         for rolePat in ['/atlas/usatlas/Role=production',
                         '/atlas/Role=production',
-                        '/atlas/usatlas/Role=pilot',                        
+                        '/atlas/usatlas/Role=pilot',
                         '/atlas/Role=pilot',
                         ]:
             if fqan.startswith(rolePat):
