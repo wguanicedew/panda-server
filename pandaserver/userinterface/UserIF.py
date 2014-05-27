@@ -74,6 +74,7 @@ class UserIF:
         # reject injection for bad prodSourceLabel
         if not goodProdSourceLabel:
             return "ERROR: production role is required for production jobs"
+        job0 = None
         # get user VO
         userVO = 'atlas'
         if len(jobs):
@@ -88,6 +89,12 @@ class UserIF:
             except:
                 errType, errValue = sys.exc_info()[:2]
                 _logger.error("submitJobs : checking userVO: userVO not found, defaulting to %s. %s %s" % (errType, errValue, userVO))
+        # get LSST pipeline username
+        if userVO.lower() == 'lsst':
+            try:
+                user = job0.prodUserName
+            except:
+                _logger.error("submitJobs : checking username for userVO[%s]: username not found, defaulting to %s. %s %s" % (userVO, user))
         # store jobs
         ret = self.taskBuffer.storeJobs(jobs,user,forkSetupper=True,fqans=userFQANs,
                                         hostname=host, toPending=toPending, userVO=userVO)
@@ -909,7 +916,7 @@ def _getDN(req):
         realDN = re.sub('/CN=limited proxy','',realDN)
         realDN = re.sub('/CN=proxy(/CN=proxy)+','/CN=proxy',realDN)
     return realDN
-                                        
+
 
 # check role
 def _isProdRoleATLAS(req):
