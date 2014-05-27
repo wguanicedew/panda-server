@@ -92,7 +92,8 @@ class UserIF:
         # get LSST pipeline username
         if userVO.lower() == 'lsst':
             try:
-                user = job0.prodUserName
+                if job0.prodUserName is not None and len(job0.prodUserName):
+                    user = job0.prodUserName
             except:
                 _logger.error("submitJobs : checking username for userVO[%s]: username not found, defaulting to %s. %s %s" % (userVO, user))
         # store jobs
