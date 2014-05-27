@@ -26,7 +26,7 @@ for idx,argv in enumerate(sys.argv):
             if len(lsstJobParams):
                 lsstJobParams += "|"
             lsstJobParams += "%(key)s=%(value)s" % \
-                {'key': 'PIPELINE_TASK', \
+                {'key': 'PIPELINE_USER', \
                  'value': str(prodUserName)}
         except:
             prodUserName = None
