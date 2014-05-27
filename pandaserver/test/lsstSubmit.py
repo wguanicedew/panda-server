@@ -23,6 +23,11 @@ for idx,argv in enumerate(sys.argv):
     if argv == '-PIPELINE_USER':
         try:
             prodUserName = sys.argv[idx + 1]
+            if len(lsstJobParams):
+                lsstJobParams += "|"
+            lsstJobParams += "%(key)s=%(value)s" % \
+                {'key': 'PIPELINE_TASK', \
+                 'value': str(prodUserName)}
         except:
             prodUserName = None
     if argv == '-PIPELINE_TASK':
