@@ -6,42 +6,124 @@ from taskbuffer.JobSpec import JobSpec
 from taskbuffer.FileSpec import FileSpec
 
 aSrvID = None
+prodUserName = None
+site = 'ANALY_BNL-LSST'
+PIPELINE_TASK = None
+PIPELINE_PROCESSINSTANCE = None
+PIPELINE_EXECUTIONNUMBER = None
+PIPELINE_STREAM = None
+lsstJobParams = ""
 
 for idx,argv in enumerate(sys.argv):
+    if argv == '--site':
+        try:
+            site = sys.argv[idx + 1]
+        except:
+            site = 'ANALY_BNL-LSST'
+    if argv == '-PIPELINE_USER':
+        try:
+            prodUserName = sys.argv[idx + 1]
+        except:
+            prodUserName = None
+    if argv == '-PIPELINE_TASK':
+        try:
+            PIPELINE_TASK = sys.argv[idx + 1]
+            if len(lsstJobParams):
+                lsstJobParams += "|"
+            lsstJobParams += "%(key)s=%(value)s" % \
+                {'key': 'PIPELINE_TASK', \
+                 'value': str(PIPELINE_TASK)}
+        except:
+            PIPELINE_TASK = None
+    if argv == '-PIPELINE_PROCESSINSTANCE':
+        try:
+            PIPELINE_PROCESSINSTANCE = int(sys.argv[idx + 1])
+            if len(lsstJobParams):
+                lsstJobParams += "|"
+            lsstJobParams += "%(key)s=%(value)s" % \
+                {'key': 'PIPELINE_PROCESSINSTANCE', \
+                 'value': str(PIPELINE_PROCESSINSTANCE)}
+        except:
+            PIPELINE_PROCESSINSTANCE = None
+    if argv == '-PIPELINE_EXECUTIONNUMBER':
+        try:
+            PIPELINE_EXECUTIONNUMBER = int(sys.argv[idx + 1])
+            if len(lsstJobParams):
+                lsstJobParams += "|"
+            lsstJobParams += "%(key)s=%(value)s" % \
+                {'key': 'PIPELINE_EXECUTIONNUMBER', \
+                 'value': str(PIPELINE_EXECUTIONNUMBER)}
+        except:
+            PIPELINE_EXECUTIONNUMBER = None
+    if argv == '-PIPELINE_STREAM':
+        try:
+            PIPELINE_STREAM = int(sys.argv[idx + 1])
+            if len(lsstJobParams):
+                lsstJobParams += "|"
+            lsstJobParams += "%(key)s=%(value)s" % \
+                {'key': 'PIPELINE_STREAM', \
+                 'value': str(PIPELINE_STREAM)}
+        except:
+            PIPELINE_STREAM = None
     if argv == '-s':
         aSrvID = sys.argv[idx+1]
         sys.argv = sys.argv[:idx]
         break
 
 #site = sys.argv[1]
-site = 'ANALY_BNL-LSST'  #orig
+#site = 'ANALY_BNL-LSST'  #orig
 #site = 'BNL-LSST'
 #site = 'SWT2_CPB-LSST'
 #site = 'UTA_SWT2-LSST'
 #site = 'ANALY_SWT2_CPB-LSST'
 
-datasetName = 'panda.user.jschovan.lsst.%s' % commands.getoutput('uuidgen')
 destName    = None
 
+if prodUserName is not None \
+    and PIPELINE_TASK is not None \
+    and PIPELINE_EXECUTIONNUMBER is not None:
+    datasetName = 'panda.lsst.user.%(PIPELINE_EXECUTIONNUMBER)s.%(PIPELINE_TASK)s.%(prodUserName)s' % \
+    {'prodUserName': str(prodUserName), \
+     'PIPELINE_TASK': str(PIPELINE_TASK), \
+     'PIPELINE_EXECUTIONNUMBER': str(PIPELINE_EXECUTIONNUMBER) \
+     }
+else:
+    datasetName = 'panda.lsst.user.jschovan.%s' % commands.getoutput('uuidgen')
+
+if prodUserName is not None \
+    and PIPELINE_TASK is not None \
+    and PIPELINE_EXECUTIONNUMBER is not None \
+    and PIPELINE_STREAM is not None:
+    jobName = 'job.%(PIPELINE_EXECUTIONNUMBER)s.%(PIPELINE_TASK)s.%(prodUserName)s.%(PIPELINE_STREAM)s' % \
+    {'prodUserName': str(prodUserName), \
+     'PIPELINE_TASK': str(PIPELINE_TASK), \
+     'PIPELINE_EXECUTIONNUMBER': str(PIPELINE_EXECUTIONNUMBER), \
+     'PIPELINE_STREAM': str(PIPELINE_STREAM) \
+     }
+else:
+    jobName = "%s" % commands.getoutput('uuidgen')
+
+if PIPELINE_STREAM is not None:
+    jobDefinitionID = PIPELINE_STREAM
+else:
+    jobDefinitionID = int(time.time()) % 10000
+
 job = JobSpec()
-job.jobDefinitionID   = int(time.time()) % 10000
-job.jobName           = "%s" % commands.getoutput('uuidgen')
-### job.transformation    = 'http://www.usatlas.bnl.gov/~wenaus/lsst-trf/lsst-trf.sh'
+job.jobDefinitionID = jobDefinitionID
+job.jobName = jobName
 job.transformation    = 'http://pandawms.org/pandawms-jobcache/lsst-trf.sh'
 job.destinationDBlock = datasetName
-#job.destinationSE     = destName
 job.destinationSE     = 'local' 
 job.currentPriority   = 1000
-#job.prodSourceLabel   = 'ptest'
-#job.prodSourceLabel = 'panda'
-#job.prodSourceLabel = 'ptest'
-#job.prodSourceLabel = 'test'
-#job.prodSourceLabel = 'ptest'
-### 2014-01-27
-#job.prodSourceLabel = 'user'
 job.prodSourceLabel = 'panda'
-job.computingSite     = site
-job.jobParameters = ""
+job.jobParameters = lsstJobParams + ""
+if prodUserName is not None:
+    job.prodUserName = prodUserName
+if PIPELINE_PROCESSINSTANCE is not None:
+    job.taskID = PIPELINE_PROCESSINSTANCE
+if PIPELINE_EXECUTIONNUMBER is not None:
+    job.attemptNr = PIPELINE_EXECUTIONNUMBER
+job.computingSite = site
 job.VO = "lsst"
 
 fileOL = FileSpec()
