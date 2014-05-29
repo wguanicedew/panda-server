@@ -113,7 +113,6 @@ if PIPELINE_STREAM is not None:
     jobDefinitionID = PIPELINE_STREAM
 else:
     jobDefinitionID = int(time.time()) % 10000
-
 job = JobSpec()
 job.jobDefinitionID = jobDefinitionID
 job.jobName = jobName
@@ -129,6 +128,8 @@ if PIPELINE_PROCESSINSTANCE is not None:
     job.taskID = PIPELINE_PROCESSINSTANCE
 if PIPELINE_EXECUTIONNUMBER is not None:
     job.attemptNr = PIPELINE_EXECUTIONNUMBER
+if PIPELINE_TASK is not None:
+    job.processingType = PIPELINE_TASK
 job.computingSite = site
 job.VO = "lsst"
 
