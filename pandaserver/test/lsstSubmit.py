@@ -6,6 +6,7 @@ from taskbuffer.JobSpec import JobSpec
 from taskbuffer.FileSpec import FileSpec
 
 aSrvID = None
+prodUserNameDefault = 'jschovan-test'
 prodUserName = None
 site = 'ANALY_BNL-LSST'
 PIPELINE_TASK = None
@@ -124,6 +125,8 @@ job.prodSourceLabel = 'panda'
 job.jobParameters = ' --lsstJobParams="%s" ' % lsstJobParams
 if prodUserName is not None:
     job.prodUserName = prodUserName
+else:
+    job.prodUserName = prodUserNameDefault
 if PIPELINE_PROCESSINSTANCE is not None:
     job.taskID = PIPELINE_PROCESSINSTANCE
 if PIPELINE_EXECUTIONNUMBER is not None:
