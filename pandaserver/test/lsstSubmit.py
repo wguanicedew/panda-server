@@ -6,8 +6,10 @@ from taskbuffer.JobSpec import JobSpec
 from taskbuffer.FileSpec import FileSpec
 
 aSrvID = None
-prodUserNameDefault = 'jschovan-test'
+prodUserNameDefault = 'unknown-user'
 prodUserName = None
+prodUserNameDP = None
+prodUserNamePipeline = None
 site = 'ANALY_BNL-LSST'
 PIPELINE_TASK = None
 PIPELINE_PROCESSINSTANCE = None
@@ -21,16 +23,26 @@ for idx,argv in enumerate(sys.argv):
             site = sys.argv[idx + 1]
         except:
             site = 'ANALY_BNL-LSST'
+    if argv == '-DP_USER':
+        try:
+            prodUserNameDP = sys.argv[idx + 1]
+            if len(lsstJobParams):
+                lsstJobParams += "|"
+            lsstJobParams += "%(key)s=%(value)s" % \
+                {'key': 'DP_USER', \
+                 'value': str(prodUserNameDP)}
+        except:
+            prodUserNameDP = None
     if argv == '-PIPELINE_USER':
         try:
-            prodUserName = sys.argv[idx + 1]
+            prodUserNamePipeline = sys.argv[idx + 1]
             if len(lsstJobParams):
                 lsstJobParams += "|"
             lsstJobParams += "%(key)s=%(value)s" % \
                 {'key': 'PIPELINE_USER', \
-                 'value': str(prodUserName)}
+                 'value': str(prodUserNamePipeline)}
         except:
-            prodUserName = None
+            prodUserNamePipeline = None
     if argv == '-PIPELINE_TASK':
         try:
             PIPELINE_TASK = sys.argv[idx + 1]
@@ -75,6 +87,14 @@ for idx,argv in enumerate(sys.argv):
         aSrvID = sys.argv[idx+1]
         sys.argv = sys.argv[:idx]
         break
+
+
+### DP_USER and PIPELINE_USER preference
+if prodUserNameDP is not None:
+    prodUserName = prodUserNameDP
+elif prodUserNamePipeline is not None:
+    prodUserName = prodUserNamePipeline
+
 
 #site = sys.argv[1]
 #site = 'ANALY_BNL-LSST'  #orig
