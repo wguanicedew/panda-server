@@ -291,3 +291,14 @@ class JobSpec(object):
                 if tmpItem.startswith('lb:'):
                     return int(tmpItem.split(':')[-1])
         return None
+
+
+
+    # get DDM backend
+    def getDdmBackEnd(self):
+        if self.specialHandling == None:
+            return None
+        for tmpItem in self.specialHandling.split(','):
+            if tmpItem.startswith('ddm:'):
+                return tmpItem.split(':')[-1]
+        return None
