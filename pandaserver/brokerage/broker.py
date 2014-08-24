@@ -551,6 +551,7 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
         prevDirectAcc  = None
         prevCoreCount  = None
         prevIsJEDI     = None
+        prevDDM        = None
         prevBrokergageSiteList = None
         prevManualPreset = None
         prevGoToT2Flag   = None
@@ -719,7 +720,8 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                    or prevProType != job.processingType \
                    or prevMaxCpuCount != job.maxCpuCount \
                    or prevBrokergageSiteList != specialBrokergageSiteList \
-                   or prevIsJEDI != isJEDI:
+                   or prevIsJEDI != isJEDI \
+                   or prevDDM != job.getDdmBackEnd():
                 if indexJob > 1:
                     tmpLog.debug('new bunch')
                     tmpLog.debug('  iJob           %s'    % iJob)
@@ -737,6 +739,7 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                     tmpLog.debug('  maxCpuCount    %s' % prevMaxCpuCount)
                     tmpLog.debug('  transferType   %s' % prevDirectAcc)
                     tmpLog.debug('  goToT2         %s' % prevGoToT2Flag)
+                    tmpLog.debug('  DDM            %s' % prevDDM)
                 # brokerage decisions    
                 resultsForAnal   = {'rel':[],'pilot':[],'disk':[],'status':[],'weight':[],'memory':[],
                                     'share':[],'transferring':[],'prefcountry':[],'cpucore':[],
@@ -1609,6 +1612,7 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
             prevWorkingGroup = job.workingGroup
             prevBrokerageNote = brokerageNote
             prevIsJEDI = isJEDI
+            prevDDM = job.getDdmBackEnd()
             # truncate prio to avoid too many lookups
             if not job.currentPriority in [None,'NULL']:
                 prevPriority = (job.currentPriority / prioInterval) * prioInterval

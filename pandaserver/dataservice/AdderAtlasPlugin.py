@@ -55,7 +55,11 @@ class AdderAtlasPlugin (AdderPluginBase):
         try:
             self.logger.debug("start plugin : %s" % self.jobStatus)
             # instantiate DQ2
-            self.dq2api = DQ2.DQ2()
+            if self.job.getDdmBackEnd() == 'rucio':
+                self.dq2api = DQ2.DQ2(force_backend='rucio')
+            else:
+                self.dq2api = DQ2.DQ2()
+            self.logger.debug("ddm backend = {0}".format(self.job.getDdmBackEnd()))
             # add files only to top-level datasets for transferring jobs
             if self.job.jobStatus == 'transferring':
                 self.addToTopOnly = True
@@ -392,7 +396,10 @@ class AdderAtlasPlugin (AdderPluginBase):
                      else:
                          regMsgStr = "LFC+DQ2 registraion for %s files " % regNumFiles
                          self.logger.debug('%s %s %s' % ('Register.registerFilesInDatasets',tmpDest,str(tmpIdMap)))                    
-                         registerAPI = Register2.Register(tmpDest)
+                         if self.job.getDdmBackEnd() == 'rucio':
+                             registerAPI = Register2.Register(tmpDest,force_backend='rucio')
+                         else:    
+                             registerAPI = Register2.Register(tmpDest)
                          out = registerAPI.registerFilesInDatasets(tmpIdMap)
                  except DQ2.DQFileExistsInDatasetException:
                      # hamless error 

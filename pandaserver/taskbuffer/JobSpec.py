@@ -264,3 +264,15 @@ class JobSpec(object):
             return val
         return val[:cls._limitLength[attr]]
     truncateStringAttr = classmethod(truncateStringAttr)
+
+
+
+    # get DDM backend
+    def getDdmBackEnd(self):
+        if self.specialHandling == None:
+            return None
+        for tmpItem in self.specialHandling.split(','):
+            if tmpItem.startswith('ddm:'):
+                return tmpItem.split(':')[-1]
+        return None
+            
