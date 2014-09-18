@@ -16,7 +16,7 @@ from brokerage.SiteMapper import SiteMapper
 from dataservice import DataServiceUtils
 from dataservice.DDMHandler import DDMHandler
 
-import json
+import yaml
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
@@ -74,7 +74,7 @@ class DatasetCallbackListener(stomp.ConnectionListener):
             id = headers['message-id']
             self.conn.ack({'message-id':id})
 	    # convert message form str to dict
-            messageDict = json.loads(message)
+            messageDict = yaml.load(message)
             # check event type
             if not messageDict['event_type'] in ['datasetlock_ok']:
                 _logger.debug('%s skip' % messageDict['event_type'])
@@ -82,13 +82,13 @@ class DatasetCallbackListener(stomp.ConnectionListener):
 	    _logger.debug('%s start' % messageDict['event_type'])  
             messageObj = messageDict['payload']
             # only for _dis or _sub
-	    dsn = str(messageObj['name'])
+	    dsn = messageObj['name']
 	    if (re.search('_dis\d+$',dsn) == None) and (re.search('_sub\d+$',dsn) == None):
 		_logger.debug('%s is not _dis or _sub dataset, skip' % dsn)
 		return
             # take action
-	    scope = str(messageObj['scope'])
-	    site  = str(messageObj['rse'])
+	    scope = messageObj['scope']
+	    site  = messageObj['rse']
 	    _logger.debug('%s site=%s type=%s' % (dsn, site, messageDict['event_type']))
 	    thr = DDMHandler(self.taskBuffer,None,site,dsn,scope)
 	    thr.start()
