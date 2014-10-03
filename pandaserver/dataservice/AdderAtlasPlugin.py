@@ -219,7 +219,7 @@ class AdderAtlasPlugin (AdderPluginBase):
                             dsDestMap[file.destinationDBlock] = tmpDestList
                     idMap[file.destinationDBlock].append(fileAttrs)
                     # for subscription
-                    if self.job.prodSourceLabel in ['managed','test','software','rc_test','ptest','user'] and \
+                    if self.job.prodSourceLabel in ['managed','test','software','rc_test','ptest','user','rucio_test'] and \
                            re.search('_sub\d+$',file.destinationDBlock) != None and (not self.addToTopOnly) and \
                            self.job.destinationSE != 'local':
                         if self.siteMapper == None:
