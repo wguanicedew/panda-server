@@ -132,7 +132,7 @@ def main(backGround=False):
         # instantiate sitemapper
         siteMapper = SiteMapper(taskBuffer)
         # ActiveMQ params
-	queue = '/topic/rucio.events'
+	queue = '/queue/Consumer.panda.rucio.events'
         ssl_opts = {'use_ssl' : True,
                     'ssl_cert_file' : certName,
                     'ssl_key_file'  : '/data/atlpan/pandasv1_userkey.pem'}

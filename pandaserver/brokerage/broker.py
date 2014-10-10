@@ -163,7 +163,9 @@ def _setReadyToFiles(tmpJob,okFiles,siteMapper,tmpLog):
     prestageSites = getPrestageSites(siteMapper)
     for tmpFile in tmpJob.Files:
         if tmpFile.type == 'input':
-            if DataServiceUtils.isCachedFile(tmpFile.dataset,tmpSiteSpec):
+            if tmpFile.status == 'ready':
+                tmpFile.dispatchDBlock = 'NULL'
+            elif DataServiceUtils.isCachedFile(tmpFile.dataset,tmpSiteSpec):
                 # cached file
                 tmpFile.status = 'cached'
                 tmpFile.dispatchDBlock = 'NULL'
@@ -713,12 +715,12 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                    or (computingSite in ['RAL_REPRO','INFN-T1_REPRO'] and len(fileList)>=2) \
                    or (prevProType in skipBrokerageProTypes and iJob > 0) \
                    or prevDirectAcc != job.transferType \
-                   or prevMemory != job.minRamCount \
-                   or prevDiskCount != job.maxDiskCount \
+                   or (prevMemory != job.minRamCount and not isJEDI) \
+                   or (prevDiskCount != job.maxDiskCount and not isJEDI) \
                    or prevCoreCount != job.coreCount \
                    or prevWorkingGroup != job.workingGroup \
                    or prevProType != job.processingType \
-                   or prevMaxCpuCount != job.maxCpuCount \
+                   or (prevMaxCpuCount != job.maxCpuCount and not isJEDI) \
                    or prevBrokergageSiteList != specialBrokergageSiteList \
                    or prevIsJEDI != isJEDI \
                    or prevDDM != job.getDdmBackEnd():
@@ -756,6 +758,8 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                          # get files from LRC 
                          okFiles = _getOkFiles(tmp_chosen_ce,fileList,guidList,allLFNs,allGUIDs,allOkFilesMap,
                                                tmpLog,scopeList,allScopes)
+                         nOkFiles = len(okFiles)
+                         tmpLog.debug('site:%s - nFiles:%s/%s %s %s' % (computingSite,nOkFiles,len(fileList),str(fileList),str(okFiles)))
                          # loop over all jobs
                          for tmpJob in jobsInBunch:
                              # set 'ready' if files are already there
@@ -1656,7 +1660,7 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
             for file in job.Files:
                 # dispatchDBlock. Set dispDB for prestaging jobs too
                 if file.type == 'input' and file.dispatchDBlock == 'NULL' and \
-                   ((not file.status in ['ready','missing']) or job.computingSite in prestageSites):
+                   ((not file.status in ['ready','missing','cached']) or job.computingSite in prestageSites):
                     if first:
                         first = False
                         job.dispatchDBlock = dispatchDBlock
