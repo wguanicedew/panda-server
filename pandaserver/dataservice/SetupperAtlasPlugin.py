@@ -1068,7 +1068,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                 job.ddmErrorDiag = dispError[disp]
                 failedJobs.append(job)
         # update failed jobs only. succeeded jobs should be activate by DDM callback
-        self.taskBuffer.updateJobs(failedJobs,True)
+        self.updateFailedJobs(failedJobs)
         # submit ddm jobs
         if ddmJobs != []:
             ddmRet = self.taskBuffer.storeJobs(ddmJobs,ddmUser,joinThr=True)
@@ -1658,7 +1658,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
         # send jobs to jobsWaiting
         self.taskBuffer.keepJobs(jobsWaiting)
         # update failed job
-        self.taskBuffer.updateJobs(jobsFailed,True)        
+        self.updateFailedJobs(jobsFailed)
         # remove waiting/failed jobs
         self.jobs = jobsProcessed
         # delete huge variables
