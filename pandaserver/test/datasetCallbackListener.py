@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import ssl
 import time
 import signal
 import socket
@@ -133,17 +134,18 @@ def main(backGround=False):
         siteMapper = SiteMapper(taskBuffer)
         # ActiveMQ params
 	queue = '/queue/Consumer.panda.rucio.events'
+        #'ssl_version' : ssl.PROTOCOL_TLSv1,
         ssl_opts = {'use_ssl' : True,
                     'ssl_cert_file' : certName,
                     'ssl_key_file'  : '/data/atlpan/pandasv1_userkey.pem'}
         # resolve multiple brokers
-        brokerList = socket.gethostbyname_ex('atlasddm-mb.cern.ch')[-1]
+        brokerList = socket.gethostbyname_ex('atlas-mb.cern.ch')[-1]
 	# set listener
         for tmpBroker in brokerList:
             try:
                 clientid = 'PANDA-' + socket.getfqdn() + '-' + tmpBroker
                 _logger.debug('setting listener %s to broker %s' % (clientid, tmpBroker))
-                conn = stomp.Connection(host_and_ports = [(tmpBroker, 6162)], **ssl_opts)
+                conn = stomp.Connection(host_and_ports = [(tmpBroker, 61023)], **ssl_opts)
                 conn.set_listener('DatasetCallbackListener', DatasetCallbackListener(conn,taskBuffer,siteMapper))
                 conn.start()
                 conn.connect(headers = {'client-id': clientid})

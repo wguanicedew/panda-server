@@ -257,11 +257,12 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                 # collect LFN and GUID
                 for file in job.Files:
                     if file.type == 'input' and file.status == 'pending':
-                        if not file.lfn in fileList[job.dispatchDBlock]['lfns']:
-                            if job.getDdmBackEnd() != 'rucio':
-                                fileList[job.dispatchDBlock]['lfns'].append(file.lfn)
-                            else:
-                                fileList[job.dispatchDBlock]['lfns'].append('{0}:{1}'.format(file.scope,file.lfn))
+                        if job.getDdmBackEnd() != 'rucio':
+                            tmpLFN = file.lfn
+                        else:
+                            tmpLFN = '{0}:{1}'.format(file.scope,file.lfn)
+                        if not tmpLFN in fileList[job.dispatchDBlock]['lfns']:
+                            fileList[job.dispatchDBlock]['lfns'].append(tmpLFN)
                             fileList[job.dispatchDBlock]['guids'].append(file.GUID)
                             if file.fsize in ['NULL',0]:
                                 fileList[job.dispatchDBlock]['fsizes'].append(None)
