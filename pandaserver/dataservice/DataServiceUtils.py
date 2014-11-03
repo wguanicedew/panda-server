@@ -322,3 +322,45 @@ def getSitesShareDDM(siteMapper,siteName):
             retSites.append(tmpSiteSpec.sitename)
     # return
     return retSites
+
+
+# check if destination is specified
+def getDestinationSE(destinationDBlockToken):
+    if destinationDBlockToken != None:
+        for tmpToken in destinationDBlockToken.split(','):
+            tmpMatch = re.search('^dst:(.*)$',tmpToken)
+            if tmpMatch != None:
+                return tmpMatch.group(1)
+    return None
+
+
+# check if job sets destination
+def checkJobDestinationSE(tmpJob):
+    for tmpFile in tmpJob.Files:
+        if getDestinationSE(tmpFile.destinationDBlockToken) != None:
+            return tmpFile.destinationSE
+    return None
+
+
+
+# get assiciated TAPE endpoints
+def getAssociatedTapeEndPoints(endPoint,toa,replicaMap):
+    # get alternate name
+    exec "altName = {0}".format(toa.getSiteProperty(endPoint,'alternateName')[1])
+    # get assiciated endpoints
+    assEndPoints = []
+    if altName != None and altName != ['']:
+        exec "tmpEndPoints = {0}".format(toa.resolveGOC({altName[0]:None})[1])
+        # look for tape endpoints
+        for tmpEndPoint in tmpEndPoints[altName[0]]:
+            tmpS,tmpRet = toa.getSiteProperty(tmpEndPoint,'tape')
+            if tmpRet == 'True':
+                assEndPoints.append(tmpEndPoint)
+    # look for replicas
+    repEndPoints = []
+    for tmpDataset,tmpRepMap in replicaMap.iteritems():
+        for assEndPoint in assEndPoints:
+            if assEndPoint in tmpRepMap:
+                repEndPoints.append(assEndPoint)
+    return repEndPoints
+
