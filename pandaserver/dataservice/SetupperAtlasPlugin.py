@@ -25,6 +25,7 @@ from brokerage.PandaSiteIDs import PandaMoverIDs
 import brokerage.broker
 import brokerage.broker_util
 import DataServiceUtils
+from rucio.client import Client as RucioClient
 
 from SetupperPluginBase import SetupperPluginBase
 
@@ -253,11 +254,15 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                                                     'chksums':[]}
                 # DDM backend
                 if not job.dispatchDBlock in backEndMap:
-                    backEndMap[job.dispatchDBlock] = job.getDdmBackEnd()
+                    # check if rucio dataset
+                    if job.getDdmBackEnd() == 'rucio' and not self.checkRucioDataset(job.prodDBlock):
+                        backEndMap[job.dispatchDBlock] = None
+                    else:
+                        backEndMap[job.dispatchDBlock] = job.getDdmBackEnd()
                 # collect LFN and GUID
                 for file in job.Files:
                     if file.type == 'input' and file.status == 'pending':
-                        if job.getDdmBackEnd() != 'rucio':
+                        if backEndMap[job.dispatchDBlock] != 'rucio':
                             tmpLFN = file.lfn
                         else:
                             tmpLFN = '{0}:{1}'.format(file.scope,file.lfn)
@@ -2410,4 +2415,23 @@ class SetupperAtlasPlugin (SetupperPluginBase):
         except:
             pass
         time.sleep(1)
-                            
+
+
+    # check if rucio dataset
+    def checkRucioDataset(self,datasetName,scope=None):
+        try:
+            # use the first part as scope
+            if scope == None:
+                if ':' in datasetName:
+                    scope = datasetName.split(':')[0]
+                else:
+                    scope = datasetName.split('.')[0]
+            # remove :
+            datasetName = datasetName.split(':')[-1]
+            # check with rucio
+            rucioapi = RucioClient()
+            x = rucioapi.get_metadata(scope,datasetName)
+        except:
+            self.logger.debug('{0}:{1} is not found in rucio'.format(scope,datasetName))
+            return False
+        return True
