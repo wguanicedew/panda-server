@@ -38,7 +38,7 @@ class AdderGen:
         self.attemptNr = None
         self.xmlFile = xmlFile
         self.datasetMap = {}
-        self.extraInfo = {'surl':{},'nevents':{}}
+        self.extraInfo = {'surl':{},'nevents':{},'lbnr':{}}
         # exstract attemptNr
         try:
             tmpAttemptNr = self.xmlFile.split('/')[-1].split('_')[-1]
@@ -380,6 +380,8 @@ class AdderGen:
         except:
             pass
         self.logger.debug('nEventsMap=%s' % str(nEventsMap))
+        # get lumi block number
+        lumiBlockNr = self.job.getLumiBlockNr()
         # check files
         fileList = []
         for file in self.job.Files:
@@ -428,6 +430,9 @@ class AdderGen:
                     file.status = 'failed'
                     type, value, traceBack = sys.exc_info()
                     self.logger.error(": %s %s" % (type,value))
+                # set lumi block number
+                if lumiBlockNr != None and file.status != 'failed':
+                    self.extraInfo['lbnr'][file.lfn] = lumiBlockNr 
         # check consistency between XML and filesTable
         for lfn in lfns:
             if not lfn in fileList:
