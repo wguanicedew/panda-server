@@ -217,6 +217,15 @@ class AdderAtlasPlugin (AdderPluginBase):
                                     if not tmpDest in tmpDestList:
                                         tmpDestList.append(tmpDest)
                             dsDestMap[file.destinationDBlock] = tmpDestList
+                    # extra meta data
+                    if self.job.getDdmBackEnd() == 'rucio':
+                        if file.lfn in self.extraInfo['lbnr']:
+                            fileAttrs['lumiblocknr'] = self.extraInfo['lbnr'][file.lfn]
+                        if file.lfn in self.extraInfo['nevents']:
+                            fileAttrs['events'] = self.extraInfo['nevents'][file.lfn]
+                        #if not file.jediTaskID in [0,None,'NULL']:
+                        #    fileAttrs['task_id'] = file.jediTaskID
+                        #fileAttrs['panda_id'] = file.PandaID
                     idMap[file.destinationDBlock].append(fileAttrs)
                     # for subscription
                     if self.job.prodSourceLabel in ['managed','test','software','rc_test','ptest','user','rucio_test'] and \
@@ -394,8 +403,9 @@ class AdderAtlasPlugin (AdderPluginBase):
                          self.logger.debug('%s %s' % ('registerFilesInDatasets',str(tmpIdMap)))
                          self.dq2api.registerFilesInDatasets(tmpIdMap)
                      else:
-                         regMsgStr = "LFC+DQ2 registraion for %s files " % regNumFiles
-                         self.logger.debug('%s %s %s' % ('Register.registerFilesInDatasets',tmpDest,str(tmpIdMap)))                    
+                         regMsgStr = "LFC+DQ2 registraion with backend={0} for {1} files ".format(self.job.getDdmBackEnd(),
+                                                                                                  regNumFiles)
+                         self.logger.debug('%s %s %s' % ('Register.registerFilesInDatasets',tmpDest,str(tmpIdMap)))
                          if self.job.getDdmBackEnd() == 'rucio':
                              registerAPI = Register2.Register(tmpDest,force_backend='rucio')
                          else:    
