@@ -29,7 +29,7 @@ _logger = PandaLogger().getLogger('datasetCallbackListener')
 pidFile = '%s/dataset_callback_listener.pid' % panda_config.logdir
 
 # overall timeout value
-overallTimeout = 60 * 9
+overallTimeout = 60 * 59
 
 # expiration time
 expirationTime = datetime.datetime.utcnow() + datetime.timedelta(minutes=overallTimeout)
@@ -75,7 +75,7 @@ class DatasetCallbackListener(stomp.ConnectionListener):
             dsn = 'UNKNOWN'
             # send ack
             id = headers['message-id']
-            self.conn.ack(id,self.subscription_id)
+            #self.conn.ack(id,self.subscription_id)
 	    # convert message form str to dict
             messageDict = yaml.load(message)
             # check event type
@@ -163,7 +163,7 @@ def main(backGround=False):
                                                                                              subscription_id))
                         conn.start()
                         conn.connect(headers = {'client-id': clientid})
-                        conn.subscribe(destination=queue, id=subscription_id, ack='client-individual')
+                        conn.subscribe(destination=queue, id=subscription_id, ack='auto')
                         _logger.debug('listener %s is up and running' % clientid)
                 except:     
                     errtype,errvalue = sys.exc_info()[:2]
