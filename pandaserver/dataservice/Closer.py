@@ -58,6 +58,7 @@ class Closer:
             usingMerger     = False        
             disableNotifier = False
             firstIndvDS     = True
+            finalStatusDS   = []
             for destinationDBlock in self.destinationDBlocks:
                 dsList = []
                 _logger.debug('%s start %s' % (self.pandaID,destinationDBlock))
@@ -114,6 +115,8 @@ class Closer:
                     usingMerger = True
                     # disable Notifier
                     disableNotifier = True
+                elif self.job.produceUnMerge():
+                    finalStatus = 'doing'
                 else:
                     # set status to 'tobeclosed' to trigger DQ2 closing
                     finalStatus = 'tobeclosed'
@@ -125,6 +128,7 @@ class Closer:
                     retT = self.taskBuffer.updateDatasets(dsList,withLock=True,withCriteria="status<>:crStatus AND status<>:lockStatus ",
                                                           criteriaMap={':crStatus':finalStatus,':lockStatus':'locked'})
                     if len(retT) > 0 and retT[0]==1:
+                        finalStatusDS += dsList
                         # close user datasets
                         if self.job.prodSourceLabel in ['user'] and self.job.destinationDBlock.endswith('/') \
                                and (dataset.name.startswith('user') or dataset.name.startswith('group')):
@@ -277,9 +281,9 @@ class Closer:
                 finalizedFlag = self.taskBuffer.finalizePendingJobs(self.job.prodUserName,self.job.jobDefinitionID,waitLock=True)
                 _logger.debug('%s finalized with %s' % (self.pandaID,finalizedFlag))
             # update unmerged datasets in JEDI to trigger merging
-            if flagComplete and self.job.produceUnMerge():
+            if flagComplete and self.job.produceUnMerge() and finalStatusDS != []:
                 if finalizedFlag:
-                    self.taskBuffer.updateUnmergedDatasets(self.job)
+                    self.taskBuffer.updateUnmergedDatasets(self.job,finalStatusDS)
             # start notifier
             _logger.debug('%s source:%s complete:%s' % (self.pandaID,self.job.prodSourceLabel,flagComplete))
             if (self.job.jobStatus != 'transferring') and ((flagComplete and self.job.prodSourceLabel=='user') or \

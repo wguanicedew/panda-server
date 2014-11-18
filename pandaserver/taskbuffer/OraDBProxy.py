@@ -1682,7 +1682,7 @@ class DBProxy:
                             updatedFlag = True
                         if nUp == 0 and jobStatus == 'transferring':
                             _logger.debug("updateJobStatus : PandaID=%s ignore to update for transferring" % pandaID)
-                        # update nFilesOnHold for JEDI
+                        # update nFilesOnHold for JEDI RW calculation
                         if updatedFlag and oldJobStatus != jobStatus and (jobStatus == 'transferring' or oldJobStatus == 'transferring') and \
                                 hasattr(panda_config,'useJEDI') and panda_config.useJEDI == True and \
                                 lockedby == 'jedi' and self.checkTaskStatusJEDI(jediTaskID,self.cur):
@@ -1735,10 +1735,13 @@ class DBProxy:
                                 else:
                                     sqlJediDU += "nFilesOnHold=nFilesOnHold-:diffNum "
                                 sqlJediDU += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
+                                sqlJediDU += "AND NOT type IN (:ngType1,:ngType2) "
                                 varMap = {}
                                 varMap[':jediTaskID'] = jediTaskID
                                 varMap[':datasetID']  = tmpDatasetID
                                 varMap[':diffNum']    = abs(diffNum)
+                                varMap[':ngType1']    = 'trn_log'
+                                varMap[':ngType2']    = 'trn_output'
                                 _logger.debug(sqlJediDU+comment+str(varMap))
                                 self.cur.execute(sqlJediDU+comment, varMap)
                 else:
@@ -2867,7 +2870,9 @@ class DBProxy:
                     if not EventServiceUtils.isEventServiceMerge(job) or file.type in ['output','log']: 
                         job.addFile(file)
                     # get event ragnes for event service
-                    if EventServiceUtils.isEventServiceMerge(job):
+                    # FIXME for SC14
+                    #if EventServiceUtils.isEventServiceMerge(job):
+                    if EventServiceUtils.isEventServiceMerge(job) and not siteName in ['BNL_PROD','BNL_CLOUD_MCORE']:
                         # only for input
                         if not file.type in ['output','log']:
                             # get ranges
@@ -4416,10 +4421,11 @@ class DBProxy:
             varMap = {}
             varMap[':jobStatus'] = 'transferring'
             varMap[':currentPriority'] = 800
-            varMap[':prodSourceLabel'] = 'managed'
+            varMap[':pLabel1'] = 'managed'
+            varMap[':pLabel2'] = 'rucio_test'
             # make sql
             sql  = "SELECT PandaID FROM ATLAS_PANDA.jobsActive4 "
-            sql += "WHERE jobStatus=:jobStatus AND modificationTime<:modificationTime AND prodSourceLabel=:prodSourceLabel "
+            sql += "WHERE jobStatus=:jobStatus AND modificationTime<:modificationTime AND prodSourceLabel IN (:pLabel1,:pLabel2) "
             if highPrio:
                 varMap[':modificationTime'] = timeNow - datetime.timedelta(hours=1)
                 sql += "AND currentPriority>=:currentPriority AND rownum<=%s " % rownum
@@ -11771,7 +11777,30 @@ class DBProxy:
                         datasetContentsStat[datasetID]['nFilesOnHold'] -= 1
                 # killed dring merging
                 if jobSpec.jobStatus == 'cancelled' and oldJobStatus == 'merging' and fileSpec.isUnMergedOutput():
-                    datasetContentsStat[datasetID]['nFilesOnHold'] -= 1
+                    # get corresponding sub
+                    varMap = {}
+                    varMap[':pandaID']    = jobSpec.PandaID
+                    varMap[':fileID']     = fileSpec.fileID
+                    varMap[':datasetID']  = fileSpec.datasetID
+                    varMap[':jediTaskID'] = jobSpec.jediTaskID
+                    sqlGetDest  = "SELECT destinationDBlock FROM ATLAS_PANDA.filesTable4 "
+                    sqlGetDest += "WHERE pandaID=:pandaID AND jediTaskID=:jediTaskID AND datasetID=:datasetID AND fileID=:fileID "
+                    cur.execute(sqlGetDest+comment,varMap)
+                    preMergedDest, = self.cur.fetchone()
+                    # check if corresponding sub is closed
+                    varMap = {}
+                    varMap[':name']    = preMergedDest
+                    varMap[':subtype'] = 'sub'
+                    sqlCheckDest  = "SELECT status FROM ATLAS_PANDA.Datasets "
+                    sqlCheckDest += "WHERE name=:name AND subtype=:subtype "
+                    cur.execute(sqlCheckDest+comment,varMap)
+                    preMergedDestStat, = self.cur.fetchone()
+                    if not preMergedDestStat in ['tobeclosed','completed']:
+                        datasetContentsStat[datasetID]['nFilesOnHold'] -= 1
+                    else:
+                        _logger.debug(methodName+' '+\
+                                          'not change nFilesOnHold for datasetID={0} since sub is in {1}'.format(datasetID,
+                                                                                                                 preMergedDestStat))
         # update JEDI_Datasets table
         nOutEvents = 0
         if datasetContentsStat != {}:
@@ -11842,7 +11871,7 @@ class DBProxy:
             if res != None:
                 if res[0] in ['ready','running','scouting','pending',
                               'topreprocess','preprocessing','aborting',
-                              'finishing','scouted']:
+                              'finishing','scouted','toreassign']:
                     retVal = True
         _logger.debug('checkTaskStatusJEDI jediTaskID=%s with %s' % (jediTaskID,retVal))            
         return retVal
@@ -12431,7 +12460,7 @@ class DBProxy:
 
 
     # update unmerged datasets to trigger merging
-    def updateUnmergedDatasets(self,job):
+    def updateUnmergedDatasets(self,job,finalStatusDS):
         comment = ' /* JediDBProxy.updateUnmergedDatasets */'
         methodName = comment.split(' ')[-2].split('.')[-1]
         methodName += " <PandaID={0}>".format(job.PandaID)
@@ -12443,7 +12472,6 @@ class DBProxy:
         sqlUNF += "SET nFilesOnHold=0,nFiles=nFilesFinished+nFilesFailed+nFilesOnHold,"
         sqlUNF += "nFilesUsed=nFilesFinished+nFilesFailed,nFilesTobeUsed=nFilesFinished+nFilesFailed+nFilesOnHold "
         sqlUNF += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
-        sqlUNF += "AND NOT status IN (:statusR,:statusD) "
         # sql to check nFiles
         sqlUCF  = "SELECT nFilesTobeUsed,nFilesUsed FROM ATLAS_PANDA.JEDI_Datasets "
         sqlUCF += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
@@ -12451,50 +12479,68 @@ class DBProxy:
         sqlUDS  = "UPDATE ATLAS_PANDA.JEDI_Datasets "
         sqlUDS += "SET status=:status "
         sqlUDS += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
+        # sql to update dataset status in panda
+        sqlUDP  = "UPDATE ATLAS_PANDA.Datasets "
+        sqlUDP += "SET status=:status "
+        sqlUDP += "WHERE vuid=:vuid AND NOT status IN (:statusR,:statusD) "
         try:
             _logger.debug('{0} start'.format(methodName))
             # begin transaction
             self.conn.begin()
+            # update dataset in panda
+            toSkip = False
+            for datasetSpec in finalStatusDS:
+                varMap = {}
+                varMap[':vuid'] = datasetSpec.vuid 
+                varMap[':status'] = 'tobeclosed'
+                varMap[':statusR'] = 'tobeclosed'
+                varMap[':statusD'] = 'completed'
+                _logger.debug(methodName+' '+sqlUDP+comment+str(varMap))
+                self.cur.execute(sqlUDP+comment, varMap)
+                nRow = self.cur.rowcount
+                if nRow != 1:
+                    toSkip = True
+                    _logger.debug('{0} failed to lock {1}'.format(methodName,
+                                                                  datasetSpec.name))
             # look for unmerged files
-            updatedDS = []
-            for tmpFile in job.Files:
-                if tmpFile.isUnMergedOutput():
-                    if tmpFile.datasetID in updatedDS:
-                        continue
-                    updatedDS.append(tmpFile.datasetID)
-                    # update nFiles
-                    varMap = {}
-                    varMap[':jediTaskID'] = tmpFile.jediTaskID
-                    varMap[':datasetID']  = tmpFile.datasetID
-                    varMap[':statusR']    = 'ready'
-                    varMap[':statusD']    = 'done'
-                    self.cur.arraysize = 10
-                    _logger.debug(sqlUNF+comment+str(varMap))
-                    self.cur.execute(sqlUNF+comment, varMap)
-                    nRow = self.cur.rowcount
-                    if nRow == 1:
-                        # check nFilesTobeUsed
+            if not toSkip:
+                updatedDS = []
+                for tmpFile in job.Files:
+                    if tmpFile.isUnMergedOutput():
+                        if tmpFile.datasetID in updatedDS:
+                            continue
+                        updatedDS.append(tmpFile.datasetID)
+                        # update nFiles
                         varMap = {}
                         varMap[':jediTaskID'] = tmpFile.jediTaskID
                         varMap[':datasetID']  = tmpFile.datasetID
-                        self.cur.execute(sqlUCF+comment, varMap)
-                        resUCF = self.cur.fetchone()
-                        if resUCF != None:
-                            nFilesTobeUsed,nFilesUsed = resUCF
+                        self.cur.arraysize = 10
+                        _logger.debug(sqlUNF+comment+str(varMap))
+                        self.cur.execute(sqlUNF+comment, varMap)
+                        nRow = self.cur.rowcount
+                        if nRow == 1:
+                            # check nFilesTobeUsed
                             varMap = {}
                             varMap[':jediTaskID'] = tmpFile.jediTaskID
                             varMap[':datasetID']  = tmpFile.datasetID
-                            if nFilesTobeUsed-nFilesUsed > 0:
-                                varMap[':status'] = 'ready'
-                            else:
-                                varMap[':status'] = 'done'
-                            # update dataset status
-                            _logger.debug(methodName+' '+sqlUDS+comment+str(varMap))
-                            self.cur.execute(sqlUDS+comment, varMap)
-                    else:
-                        _logger.debug('{0} skip jediTaskID={1} datasetID={2}'.format(methodName,
-                                                                                     tmpFile.jediTaskID,
-                                                                                     tmpFile.datasetID))
+                            self.cur.execute(sqlUCF+comment, varMap)
+                            resUCF = self.cur.fetchone()
+                            if resUCF != None:
+                                nFilesTobeUsed,nFilesUsed = resUCF
+                                varMap = {}
+                                varMap[':jediTaskID'] = tmpFile.jediTaskID
+                                varMap[':datasetID']  = tmpFile.datasetID
+                                if nFilesTobeUsed-nFilesUsed > 0:
+                                    varMap[':status'] = 'ready'
+                                else:
+                                    varMap[':status'] = 'done'
+                                # update dataset status
+                                _logger.debug(methodName+' '+sqlUDS+comment+str(varMap))
+                                self.cur.execute(sqlUDS+comment, varMap)
+                        else:
+                            _logger.debug('{0} skip jediTaskID={1} datasetID={2}'.format(methodName,
+                                                                                         tmpFile.jediTaskID,
+                                                                                         tmpFile.datasetID))
             # commit
             if not self._commit():
                 raise RuntimeError, 'Commit error'
@@ -12981,7 +13027,9 @@ class DBProxy:
             varMap[':esReady']     = EventServiceUtils.ST_ready
             _logger.debug(sqlEC+comment+str(varMap))
             self.cur.execute(sqlEC+comment, varMap)
-            # chenge status to done
+            nRowEC = self.cur.rowcount
+            _logger.debug("{0} : released {1} event ranges".format(methodName,nRowEC))
+            # change status to done
             sqlED  = "UPDATE {0}.JEDI_Events SET status=:newStatus ".format(panda_config.schemaJEDI)
             sqlED += "WHERE jediTaskID=:jediTaskID AND pandaID=:pandaID AND status=:oldStatus "
             varMap = {}
@@ -12990,6 +13038,8 @@ class DBProxy:
             varMap[':oldStatus']  = EventServiceUtils.ST_finished
             varMap[':newStatus']  = EventServiceUtils.ST_done
             self.cur.execute(sqlED+comment, varMap)
+            nRowED = self.cur.rowcount
+            _logger.debug("{0} : set done to {1} event ranges".format(methodName,nRowED))
             # look for hopeless event ranges
             sqlEU  = "SELECT COUNT(*) FROM {0}.JEDI_Events ".format(panda_config.schemaJEDI)
             sqlEU += "WHERE jediTaskID=:jediTaskID AND pandaID=:jobsetID AND attemptNr=:minAttempt AND rownum=1 "
@@ -13014,9 +13064,11 @@ class DBProxy:
             varMap = {}
             varMap[':jediTaskID']  = jobSpec.jediTaskID
             varMap[':jobsetID']    = jobSpec.jobsetID
+            _logger.debug(sqlERP+comment+str(varMap))
             self.cur.execute(sqlERP+comment, varMap)
             resERP = self.cur.fetchone()
             nRow, = resERP
+            _logger.debug("{0} : {1} unprocessed event ranges".format(methodName,nRow))
             otherRunning = False
             if nRow == 0:
                 # check if other consumers finished
@@ -13032,12 +13084,14 @@ class DBProxy:
                         varMap[':esDone']      = EventServiceUtils.ST_done
                         varMap[':esDiscarded'] = EventServiceUtils.ST_discarded
                         varMap[':esCancelled'] = EventServiceUtils.ST_cancelled
+                        _logger.debug(sqlEOC+comment+str(varMap))
                         self.cur.execute(sqlEOC+comment, varMap)
                         resEOC = self.cur.fetchone()
                         nOCRow, = resEOC
                         if nOCRow != 0:
                             # there are unprocessed ranges
                             otherRunning = True
+                            _logger.debug("{0} : {1} event ranges still running".format(methodName,nOCRow))
                             break
                 # do merging since all ranges were done
                 if not otherRunning:
@@ -13059,7 +13113,8 @@ class DBProxy:
             jobSpec.modificationTime = datetime.datetime.utcnow()
             jobSpec.attemptNr       += 1
             if not doMerging:
-                jobSpec.currentPriority -= 10
+                #jobSpec.currentPriority -= 10
+                pass
             jobSpec.endTime          = None
             jobSpec.transExitCode    = None
             for attr in jobSpec._attributes:
@@ -13100,6 +13155,12 @@ class DBProxy:
                     pass
                 # change special handling
                 EventServiceUtils.setEventServiceMerge(jobSpec)
+                # FIXME patch for SC14
+                if jobSpec.computingSite.startswith('NERSC_'):
+                    jobSpec.computingSite = jobSpec.destinationSE
+                    jobSpec.AtlasRelease = 'Atlas-19.1.4'
+                    jobSpec.homepackage = 'AtlasProduction/19.1.4.1'
+                    jobSpec.coreCount = 1
             # insert job with new PandaID
             sql1  = "INSERT INTO ATLAS_PANDA.jobsActive4 ({0}) ".format(JobSpec.columnNames())
             sql1 += JobSpec.bindValuesExpression(useSeq=True)
@@ -13501,10 +13562,14 @@ class DBProxy:
             # sql to get PandaIDs of consumers
             sqlCP  = "SELECT PandaID,specialHandling FROM ATLAS_PANDA.{0} "
             sqlCP += "WHERE jediTaskID=:jediTaskID AND jobsetID=:jobsetID "
+            sqlCP += "AND jobStatus IN (:st1,:st2,:st3) "
             # get PandaIDs
             varMap = {}
             varMap[':jediTaskID'] = job.jediTaskID
             varMap[':jobsetID']   = job.jobsetID
+            varMap[':st1'] = 'activated'
+            varMap[':st2'] = 'assigned'
+            varMap[':st3'] = 'waiting'
             self.cur.arraysize = 100000
             killPandaIDsMap = {}
             for tableName in ['jobsActive4','jobsDefined4','jobsWaiting4']:

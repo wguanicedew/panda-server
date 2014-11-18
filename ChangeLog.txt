@@ -1,6 +1,14 @@
 Release Note
 
 * current
+  * check sub to reduce nFilesOnHold when merging is killed
+  * added protection to updateUmergeDataset to avoid concurrent update
+  * disabled updating nFilesOnHold by transferring for trn_*
+  * fixed Closer to update dataset status after unmerge datasets are updated
+  * removed priority reduction for ES retry
+  * changed datasetManager to kick stalled merging jobs
+  * fixed killUnusedEventServiceConsumers not to kill running consumers
+  * added toreassign to the list of active task status
   * added --prodSourceLabel to killTask
   * fixed fileCallbackListener to use TSL instead of sslv3
   * extracting LB Nr
