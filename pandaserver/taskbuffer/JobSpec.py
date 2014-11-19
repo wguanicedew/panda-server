@@ -5,6 +5,8 @@ job specification
 
 reserveChangedState = False
 
+import re
+
 
 class JobSpec(object):
     # attributes
@@ -283,6 +285,20 @@ class JobSpec(object):
             if tmpItem.startswith('ddm:'):
                 return tmpItem.split(':')[-1]
         return None
+
+
+
+    # set DDM backend
+    def setDdmBackEnd(self,backEnd):
+        if self.specialHandling == None:
+            self.specialHandling = 'ddm:'+backEnd
+        else:
+            if 'ddm:' in self.specialHandling:
+                self.specialHandling = re.sub('ddm:[,]+','ddm:'+backEnd,
+                                              self.specialHandling)
+            else:
+                self.specialHandling = self.specialHandling+','+ \
+                    'ddm:'+backEnd
 
             
 

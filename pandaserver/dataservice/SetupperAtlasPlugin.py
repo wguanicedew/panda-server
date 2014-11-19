@@ -210,8 +210,9 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                         self.logger.error(out)                                            
                     else:
                         self.logger.debug(out)
+                        newOut = DataServiceUtils.changeListDatasetsOut(out)
                         try:
-                            exec "vuids = %s['%s']['vuids']" % (out.split('\n')[0],job.prodDBlock)
+                            exec "vuids = %s['%s']['vuids']" % (newOut.split('\n')[0],job.prodDBlock)
                             nfiles = 0
                             # dataset spec
                             ds = DatasetSpec()
@@ -583,8 +584,11 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                                 else:
                                     self.logger.debug(out)
                                     vuidStr = "vuid = %s['vuid']" % out
-                                # register datasetsets
-                                if name == originalName or tmpSrcDDM != tmpDstDDM or \
+                                # register dataset locations
+                                if job.lockedby == 'jedi' and job.getDdmBackEnd() == 'rucio' and job.prodSourceLabel in ['panda','user']:
+                                    # skip registerDatasetLocations
+                                    status,out = 0,''
+                                elif name == originalName or tmpSrcDDM != tmpDstDDM or \
                                        job.prodSourceLabel == 'panda' or (job.prodSourceLabel in ['ptest','rc_test'] and \
                                                                           job.processingType in ['pathena','prun','gangarobot-rctest']) \
                                        or len(tmpTokenList) > 1:
@@ -717,7 +721,8 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                                 self.logger.error(out)
                             else:
                                 self.logger.debug(out)
-                            vuidStr = "vuid = %s['%s']['vuids'][0]" % (out.split('\n')[0],name)
+                            newOut = DataServiceUtils.changeListDatasetsOut(out)
+                            vuidStr = "vuid = %s['%s']['vuids'][0]" % (newOut.split('\n')[0],name)
                         try:
                             exec vuidStr
                             # dataset spec
