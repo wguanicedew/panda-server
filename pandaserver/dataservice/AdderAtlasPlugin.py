@@ -78,9 +78,6 @@ class AdderAtlasPlugin (AdderPluginBase):
             if self.job.jobStatus == 'transferring':
                 self.addToTopOnly = True
                 self.logger.debug("adder for transferring")
-            # use PandaDDM for ddm jobs
-            if self.job.prodSourceLabel == 'ddm':
-                self.pandaDDM = True
             # check if the job goes to merging
             if self.job.produceUnMerge():
                 self.goToMerging = True

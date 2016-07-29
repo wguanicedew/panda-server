@@ -342,7 +342,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
             if len(fileList[dispatchDBlock]['lfns']) == 0:
                 continue
             # use DQ2
-            if (not self.pandaDDM) and job.prodSourceLabel != 'ddm':
+            if (not self.pandaDDM):
                 # register dispatch dataset
                 self.dispFileList[dispatchDBlock] = fileList[dispatchDBlock]
                 disFiles = fileList[dispatchDBlock]
@@ -395,12 +395,6 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                     dispError[dispatchDBlock] = "Setupper._setupSource() could not freeze dispatchDBlock"
                     continue
                 self.logger.debug(out)
-            else:
-                # use PandaDDM
-                self.dispFileList[dispatchDBlock] = fileList[dispatchDBlock]
-                # create a fake vuidStr for PandaDDM
-                tmpMap  = {'vuid':commands.getoutput('uuidgen')}
-                vuidStr = "%s" % tmpMap
             # get VUID
             try:
                 exec "vuid = %s['vuid']" % vuidStr                
@@ -499,7 +493,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                             # for original dataset
                             computingSite = file.destinationSE
                         # use DQ2
-                        if (not self.pandaDDM) and (job.prodSourceLabel != 'ddm') and (job.destinationSE != 'local'):
+                        if (not self.pandaDDM) and (job.destinationSE != 'local'):
                             # get src and dest DDM conversion is needed for unknown sites
                             if job.prodSourceLabel == 'user' and not self.siteMapper.siteSpecList.has_key(computingSite):
                                 # DQ2 ID was set by using --destSE for analysis job to transfer output
@@ -674,11 +668,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                                     status,out = 0,''
                                 if status != 0 or out.find('Error') != -1:
                                     destError[dest] = "Could not register location : %s %s" % (name,out.split('\n')[-1])
-                        # use PandaDDM or non-DQ2
-                        else:
-                            # create a fake vuidStr
-                            vuidStr = 'vuid="%s"' % commands.getoutput('uuidgen')
-                        # already failed    
+                        # already failed
                         if destError[dest] != '' and name == originalName:
                             break
                         # get vuid
@@ -790,7 +780,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                             break
                     self.logger.debug('{0} missing at T1 : {1}'.format(job.dispatchDBlock,missingAtT1))
                 # use DQ2
-                if (not self.pandaDDM) and job.prodSourceLabel != 'ddm':
+                if (not self.pandaDDM):
                     # look for replica
                     dq2ID = srcDQ2ID
                     dq2IDList = []
@@ -972,104 +962,6 @@ class SetupperAtlasPlugin (SetupperPluginBase):
                                 dispError[disp] = "Setupper._subscribeDistpatchDB() could not register subscription"
                             else:
                                 self.logger.debug(out)
-                # use PandaDDM
-                else:
-                    # set DDM user DN
-                    if ddmUser == 'NULL':
-                        ddmUser = job.prodUserID
-                    # create a DDM job
-                    ddmjob = JobSpec()
-                    ddmjob.jobDefinitionID   = int(time.time()) % 10000
-                    ddmjob.jobName           = "%s" % commands.getoutput('uuidgen')
-                    ddmjob.transformation    = 'http://pandaserver.cern.ch:25080/trf/mover/run_dq2_cr'
-                    ddmjob.destinationDBlock = 'pandaddm_%s.%s' % (time.strftime('%y.%m.%d'),ddmjob.jobName)
-                    if job.getCloud() == 'NULL':
-                        ddmjob.cloud         = 'US'
-                    else:
-                        ddmjob.cloud         = job.getCloud() 
-                    if not PandaMoverIDs.has_key(job.getCloud()):
-                        ddmjob.computingSite = "BNL_ATLAS_DDM"
-                    else:
-                        ddmjob.computingSite = PandaMoverIDs[job.getCloud()]
-                    ddmjob.destinationSE     = ddmjob.computingSite
-                    ddmjob.assignedPriority  = 200000
-                    if job.prodSourceLabel in ['software']:
-                        # set higher priority for installation jobs
-                        ddmjob.assignedPriority += 1000
-                    else:
-                        ddmjob.assignedPriority += job.currentPriority
-                    ddmjob.currentPriority   = ddmjob.assignedPriority
-                    if self.ddmAttempt != 0:
-                        # keep count of attemptNr
-                        ddmjob.attemptNr = self.ddmAttempt + 1
-                    else:
-                        ddmjob.attemptNr = 1
-                    # check attemptNr to avoid endless loop
-                    if ddmjob.attemptNr > 10:
-                        err = "Too many attempts %s for %s" % (ddmjob.attemptNr,job.dispatchDBlock)
-                        self.logger.error(err)
-                        dispError[disp] = err
-                        continue
-                    ddmjob.prodSourceLabel   = 'ddm'
-                    ddmjob.transferType      = 'dis'
-                    ddmjob.processingType    = 'pandamover'
-                    # append log file
-                    fileOL = FileSpec()
-                    fileOL.lfn = "%s.job.log.tgz.%s" % (ddmjob.destinationDBlock,ddmjob.attemptNr)
-                    fileOL.destinationDBlock = ddmjob.destinationDBlock
-                    fileOL.destinationSE     = ddmjob.destinationSE
-                    fileOL.dataset           = ddmjob.destinationDBlock
-                    fileOL.type = 'log'
-                    ddmjob.addFile(fileOL)
-                    # make arguments
-                    callBackURL = 'https://%s:%s/server/panda/datasetCompleted?vuid=%s&site=%s' % \
-                                  (panda_config.pserverhost,panda_config.pserverport,
-                                   self.vuidMap[job.dispatchDBlock],dstDQ2ID)
-                    callBackURL = urllib.quote(callBackURL)
-                    lfnsStr = ''
-                    for tmpLFN in self.dispFileList[job.dispatchDBlock]['lfns']:
-                        lfnsStr += '%s,' % tmpLFN
-                    guidStr = ''
-                    for tmpGUID in self.dispFileList[job.dispatchDBlock]['guids']:
-                        guidStr += '%s,' % tmpGUID
-                    guidStr = guidStr[:-1]
-                    lfnsStr = lfnsStr[:-1]
-                    # check input token
-                    moverUseTape = False
-                    for tmpFile in job.Files:
-                        if tmpFile.type == 'input' and tmpFile.dispatchDBlockToken in ['ATLASDATATAPE']:
-                            moverUseTape = True
-                            break
-                    if srcDQ2ID != dstDQ2ID:
-                        # get destination dir
-                        tmpSpec = self.siteMapper.getSite(job.computingSite)
-                        destDir = brokerage.broker_util._getDefaultStorage(tmpSpec.dq2url,tmpSpec.se,tmpSpec.seprodpath)
-                        if destDir == '':
-                            err = "could not get default storage for %s" % job.computingSite
-                            self.logger.error(err)
-                            dispError[disp] = err
-                            continue
-                        # normal jobs
-                        argStr = ""
-                        if moverUseTape:
-                            argStr += "--useTape "
-                        argStr += "-t 7200 -n 3 -s %s -r %s --guids %s --lfns %s --tapePriority %s --callBack %s -d %spanda/dis/%s%s %s" % \
-                                  (srcDQ2ID,dstDQ2ID,guidStr,lfnsStr,job.currentPriority,callBackURL,destDir,
-                                   time.strftime('%y/%m/%d/'),job.dispatchDBlock,job.dispatchDBlock)
-                    else:
-                        # prestaging jobs
-                        argStr = ""
-                        if moverUseTape:
-                            argStr += "--useTape "
-                        argStr += "-t 540 -n 2 -s %s -r %s --guids %s --lfns %s --tapePriority %s --callBack %s --prestage --cloud %s %s" % \
-                                  (srcDQ2ID,dstDQ2ID,guidStr,lfnsStr,job.currentPriority,callBackURL,job.getCloud(),job.dispatchDBlock)
-                    # set job parameters
-                    ddmjob.jobParameters = argStr
-                    self.logger.debug('pdq2_cr %s' % (ddmjob.jobParameters))
-                    # set src/dest
-                    ddmjob.sourceSite      = srcDQ2ID
-                    ddmjob.destinationSite = dstDQ2ID
-                    ddmJobs.append(ddmjob)
             # failed jobs
             if dispError[disp] != '':
                 job.jobStatus = 'failed'
@@ -1478,7 +1370,7 @@ class SetupperAtlasPlugin (SetupperPluginBase):
         self.logger.debug('checking T2 LFC')
         # check availability of files at T2
         for cloudKey,tmpAllLFNs in allLFNs.iteritems():
-            if len(self.jobs) > 0 and (self.jobs[0].prodSourceLabel in ['user','panda','ddm'] or \
+            if len(self.jobs) > 0 and (self.jobs[0].prodSourceLabel in ['user','panda'] or \
                                        self.jobs[0].processingType.startswith('gangarobot') or \
                                        self.jobs[0].processingType.startswith('hammercloud')):
                 continue

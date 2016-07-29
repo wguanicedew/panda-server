@@ -86,9 +86,6 @@ class Adder (threading.Thread):
                 if self.job.jobStatus == 'transferring':
                     self.addToTopOnly = True
                     _logger.debug("%s adder for transferring" % self.jobID)
-                # use PandaDDM for ddm jobs
-                if self.job.prodSourceLabel == 'ddm':
-                    self.pandaDDM = True
                 # set job status
                 self.job.jobStatus = self.jobStatus
                 # add outputs. Cannot add self.pandaDDM here since minidom.parse() produces seg-fault

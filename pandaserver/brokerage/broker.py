@@ -1464,11 +1464,7 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
                                                                               siteReliability)
                         tmpLog.debug('PandaID:%s -> site:%s' % (tmpJob.PandaID,tmpJob.computingSite))
                         if tmpJob.computingElement == 'NULL':
-                            if tmpJob.prodSourceLabel == 'ddm':
-                                # use nickname for ddm jobs
-                                tmpJob.computingElement = chosenCE.nickname
-                            else:
-                                tmpJob.computingElement = chosenCE.gatekeeper
+                            tmpJob.computingElement = chosenCE.gatekeeper
                         # fail jobs if no sites have the release
                         if (not foundRelease or (tmpJob.relocationFlag != 1 and not foundOneCandidate)) and (tmpJob.prodSourceLabel in ['managed','test']):
                             # reset
@@ -1628,11 +1624,7 @@ def schedule(jobs,taskBuffer,siteMapper,forAnalysis=False,setScanSiteList=[],tru
             if chosen_ce != 'TOBEDONE':
                 job.computingSite = chosen_ce.sitename
                 if job.computingElement == 'NULL':
-                    if job.prodSourceLabel == 'ddm':
-                        # use nickname for ddm jobs
-                        job.computingElement = chosen_ce.nickname
-                    else:
-                        job.computingElement = chosen_ce.gatekeeper
+                    job.computingElement = chosen_ce.gatekeeper
                 # update statistics
                 if not jobStatistics.has_key(job.computingSite):
                     jobStatistics[job.computingSite] = {'assigned':0,'activated':0,'running':0}

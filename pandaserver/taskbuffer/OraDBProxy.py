@@ -1301,137 +1301,6 @@ class DBProxy:
                         if useCommit and inTransaction:
                             if not self._commit():
                                 raise RuntimeError, 'Commit error'
-                elif job.prodSourceLabel == 'ddm' and job.jobStatus == 'failed' and job.transferType=='dis':
-                    if useCommit:
-                        self.conn.begin()
-                    # get corresponding jobs for production movers
-                    vuid = ''
-                    # extract vuid
-                    match = re.search('--callBack (\S+)',job.jobParameters)
-                    if match != None:
-                        try:
-                            callbackUrl = urllib.unquote(match.group(1))
-                            callbackUrl = re.sub('[&\?]',' ', callbackUrl)
-                            # look for vuid=
-                            for item in callbackUrl.split():
-                                if item.startswith('vuid='):
-                                    vuid = item.split('=')[-1]
-                                    break
-                        except:
-                            pass
-                        if vuid == '':
-                            _logger.error("cannot extract vuid from %s" % job.jobParameters)
-                        else:
-                            # get name
-                            varMap = {}
-                            varMap[':vuid'] = vuid
-                            varMap[':type'] = 'dispatch'
-                            self.cur.arraysize = 10
-                            self.cur.execute("SELECT name FROM ATLAS_PANDA.Datasets WHERE vuid=:vuid AND type=:type "+comment, varMap)
-                            res = self.cur.fetchall()
-                            if len(res) != 0:
-                                disName = res[0][0]
-                                # check lost files
-                                varMap = {}
-                                varMap[':status'] = 'lost'
-                                varMap[':dispatchDBlock'] = disName
-                                sqlLost = "SELECT /*+ index(tab FILESTABLE4_DISPDBLOCK_IDX) */ distinct PandaID FROM ATLAS_PANDA.filesTable4 tab WHERE status=:status AND dispatchDBlock=:dispatchDBlock"
-                                self.cur.execute(sqlLost+comment,varMap)
-                                resLost = self.cur.fetchall()
-                                # fail jobs with lost files
-                                sqlDJS = "SELECT %s " % JobSpec.columnNames()
-                                sqlDJS+= "FROM ATLAS_PANDA.jobsDefined4 WHERE PandaID=:PandaID"
-                                sqlDJD = "DELETE FROM ATLAS_PANDA.jobsDefined4 WHERE PandaID=:PandaID"
-                                sqlDJI = "INSERT INTO ATLAS_PANDA.jobsArchived4 (%s) " % JobSpec.columnNames()
-                                sqlDJI+= JobSpec.bindValuesExpression()
-                                sqlFMod = "UPDATE ATLAS_PANDA.filesTable4 SET modificationTime=:modificationTime WHERE PandaID=:PandaID"
-                                sqlMMod = "UPDATE ATLAS_PANDA.metaTable SET modificationTime=:modificationTime WHERE PandaID=:PandaID"
-                                sqlPMod = "UPDATE ATLAS_PANDA.jobParamsTable SET modificationTime=:modificationTime WHERE PandaID=:PandaID"
-                                lostJobIDs = []
-                                for tmpID, in resLost:
-                                    _logger.debug("fail due to lost files : %s" % tmpID)
-                                    varMap = {}
-                                    varMap[':PandaID'] = tmpID
-                                    self.cur.arraysize = 10
-                                    self.cur.execute(sqlDJS+comment, varMap)
-                                    resJob = self.cur.fetchall()
-                                    if len(resJob) == 0:
-                                        continue
-                                    # instantiate JobSpec
-                                    dJob = JobSpec()
-                                    dJob.pack(resJob[0])
-                                    # delete
-                                    varMap = {}
-                                    varMap[':PandaID'] = tmpID
-                                    self.cur.execute(sqlDJD+comment, varMap)
-                                    retD = self.cur.rowcount
-                                    if retD == 0:
-                                        continue
-                                    # error code
-                                    dJob.jobStatus = 'failed'
-                                    dJob.endTime   = datetime.datetime.utcnow()
-                                    dJob.ddmErrorCode = 101 #ErrorCode.EC_LostFile
-                                    dJob.ddmErrorDiag = 'lost file in SE'
-                                    dJob.modificationTime = dJob.endTime
-                                    dJob.stateChangeTime  = dJob.endTime
-                                    # insert
-                                    self.cur.execute(sqlDJI+comment, dJob.valuesMap())
-                                    # update files,metadata,parametes
-                                    varMap = {}
-                                    varMap[':PandaID'] = tmpID
-                                    varMap[':modificationTime'] = dJob.modificationTime
-                                    self.cur.execute(sqlFMod+comment,varMap)
-                                    self.cur.execute(sqlMMod+comment,varMap)
-                                    self.cur.execute(sqlPMod+comment,varMap)
-                                    # append
-                                    lostJobIDs.append(tmpID)
-                                    # collect to record state change
-                                    updatedJobList.append(dJob)
-                                # get PandaIDs
-                                varMap = {}
-                                varMap[':jobStatus'] = 'assigned'
-                                varMap[':dispatchDBlock'] = disName
-                                self.cur.execute("SELECT PandaID FROM ATLAS_PANDA.jobsDefined4 WHERE dispatchDBlock=:dispatchDBlock AND jobStatus=:jobStatus "+comment,
-                                                 varMap)
-                                resDDM = self.cur.fetchall()
-                                for tmpID, in resDDM:
-                                    if not tmpID in lostJobIDs:
-                                        ddmIDs.append(tmpID)
-                                # get offset
-                                ddmAttempt = job.attemptNr
-                                _logger.debug("get PandaID for reassign : %s ddmAttempt=%s" % (str(ddmIDs),ddmAttempt))
-                    if useCommit:
-                        if not self._commit():
-                            raise RuntimeError, 'Commit error'
-                elif job.prodSourceLabel == 'ddm' and job.jobStatus == 'failed' and job.transferType=='ddm' and job.attemptNr<2 \
-                         and job.commandToPilot != 'tobekilled':
-                    # instantiate new mover to retry subscription
-                    newJob = JobSpec()
-                    newJob.jobDefinitionID   = job.jobDefinitionID
-                    newJob.jobName           = job.jobName
-                    newJob.attemptNr         = job.attemptNr + 1           
-                    newJob.transformation    = job.transformation
-                    newJob.destinationDBlock = job.destinationDBlock
-                    newJob.destinationSE     = job.destinationSE
-                    newJob.currentPriority   = job.currentPriority
-                    newJob.prodSourceLabel   = job.prodSourceLabel
-                    newJob.prodUserID        = job.prodUserID                    
-                    newJob.computingSite     = job.computingSite
-                    newJob.transferType      = job.transferType
-                    newJob.sourceSite        = job.sourceSite
-                    newJob.destinationSite   = job.destinationSite
-                    newJob.jobParameters     = job.jobParameters
-                    if job.Files != []:
-                        file = job.Files[0]
-                        fileOL = FileSpec()
-                        # add attempt nr
-                        fileOL.lfn = re.sub("\.\d+$","",file.lfn)
-                        fileOL.lfn = "%s.%d" % (fileOL.lfn,job.attemptNr)
-                        fileOL.destinationDBlock = file.destinationDBlock
-                        fileOL.destinationSE     = file.destinationSE
-                        fileOL.dataset           = file.dataset
-                        fileOL.type              = file.type
-                        newJob.addFile(fileOL)
                 # main job
                 if useCommit:
                     self.conn.begin()
@@ -2353,8 +2222,7 @@ class DBProxy:
                      and not job.processingType.startswith('hammercloud') \
                      and job.computingSite.startswith('ANALY_') and param.has_key('pilotErrorCode') \
                      and param['pilotErrorCode'] in ['1200','1201','1213'] and (not job.computingSite.startswith('ANALY_LONG_')) \
-                     and job.attemptNr < 2) or (job.prodSourceLabel == 'ddm' and job.cloud == 'CA' and job.attemptNr <= 10) \
-                     or failedInActive or usePilotRetry) \
+                     and job.attemptNr < 2) or failedInActive or usePilotRetry) \
                      and job.commandToPilot != 'tobekilled':
                     # check attemptNr for JEDI
                     moreRetryForJEDI = True
@@ -2774,10 +2642,6 @@ class DBProxy:
             getValMap[':prodSourceLabel1'] = 'user'
             getValMap[':prodSourceLabel2'] = 'panda'
             getValMap[':prodSourceLabel3'] = 'install'
-        elif prodSourceLabel == 'ddm':
-            dynamicBrokering = True
-            sql1+= "AND prodSourceLabel=:prodSourceLabel "
-            getValMap[':prodSourceLabel'] = 'ddm'
         elif prodSourceLabel in [None,'managed']:
             sql1+= "AND prodSourceLabel IN (:prodSourceLabel1,:prodSourceLabel2,:prodSourceLabel3,:prodSourceLabel4) "
             getValMap[':prodSourceLabel1'] = 'managed'
@@ -2873,72 +2737,7 @@ class DBProxy:
                 getValMap = copy.copy(getValMapOrig)
                 pandaID = 0
                 fileMapForMem = {}
-                # select channel for ddm jobs
-                if prodSourceLabel == 'ddm':
-                    sqlDDM = "SELECT count(*),jobStatus,sourceSite,destinationSite,transferType FROM ATLAS_PANDA.jobsActive4 WHERE computingSite=:computingSite AND prodSourceLabel=:prodSourceLabel " \
-                             + attSQL + "GROUP BY jobStatus,sourceSite,destinationSite,transferType"
-                    ddmValMap = {}
-                    ddmValMap[':computingSite']   = siteName
-                    ddmValMap[':creationTime']    = attLimit
-                    ddmValMap[':prodSourceLabel'] = 'ddm'
-                    _logger.debug(sqlDDM+comment+str(ddmValMap))
-                    # start transaction
-                    self.conn.begin()
-                    # select
-                    self.cur.arraysize = 100                    
-                    self.cur.execute(sqlDDM+comment, ddmValMap)
-                    resDDM = self.cur.fetchall()
-                    # commit
-                    if not self._commit():
-                        raise RuntimeError, 'Commit error'
-                    # make a channel map
-                    channelMap = {}
-                    for tmp_count,tmp_jobStatus,tmp_sourceSite,tmp_destinationSite,tmp_transferType in resDDM:
-                        # use source,dest,type as the key
-                        channel = (tmp_sourceSite,tmp_destinationSite,tmp_transferType)
-                        if not channelMap.has_key(channel):
-                            channelMap[channel] = {}
-                        # ignore holding
-                        if tmp_jobStatus == 'holding':
-                            continue
-                        # distinguish activate from other stats
-                        if tmp_jobStatus != 'activated':
-                            tmp_jobStatus = 'others'
-                        # append
-                        if not channelMap[channel].has_key(tmp_jobStatus):
-                            channelMap[channel][tmp_jobStatus] = int(tmp_count)
-                        else:
-                            channelMap[channel][tmp_jobStatus] += int(tmp_count)
-                    _logger.debug(channelMap)
-                    # choose channel
-                    channels = channelMap.keys()
-                    random.shuffle(channels)
-                    foundChannel = False
-                    for channel in channels:
-                        # no activated jobs
-                        if (not channelMap[channel].has_key('activated')) or channelMap[channel]['activated'] == 0:
-                            continue
-                        maxRunning = 15
-                        # prestaging job
-                        if channel[0] == channel[1] and channel[2] == 'dis':
-                            maxRunning = 50
-                        if (not channelMap[channel].has_key('others')) or channelMap[channel]['others'] < maxRunning:
-                            # set SQL
-                            sql1+= "AND sourceSite=:sourceSite AND destinationSite=:destinationSite AND transferType=:transferType "
-                            getValMap[':sourceSite']      = channel[0]
-                            getValMap[':destinationSite'] = channel[1]
-                            getValMap[':transferType']    = channel[2]
-                            foundChannel = True
-                            break
-                    # no proper channel
-                    if not foundChannel:
-                        _logger.debug("getJobs : no DDM jobs for Site %s" % siteName)
-                        break
                 # get job
-                if prodSourceLabel in ['ddm']:
-                    # to add some delay for attempts
-                    sql1 += attSQL
-                    getValMap[':creationTime'] = attLimit                    
                 nTry=1
                 for iTry in range(nTry):
                     # set siteID
