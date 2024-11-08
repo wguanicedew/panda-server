@@ -196,6 +196,10 @@ class DBProxy:
         if reconnect:
             _logger.debug("closing old connection")
             try:
+                self.cur.close()
+            except Exception:
+                _logger.debug("failed to close old cursor")
+            try:
                 self.conn.close()
             except Exception:
                 _logger.debug("failed to close old connection")
@@ -251,6 +255,11 @@ class DBProxy:
 
     # close connection
     def close_connection(self):
+        if self.cur:
+            try:
+                self.cur.close()
+            except Exception:
+                pass
         if self.conn:
             try:
                 self.conn.close()
