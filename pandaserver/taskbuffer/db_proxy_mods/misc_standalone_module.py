@@ -3338,7 +3338,7 @@ class MiscStandaloneModule(BaseModule):
                                 except Exception:
                                     errType, errValue = sys.exc_info()[:2]
                                     if self.isNoWaitException(errValue):
-                                        tmp_log.error(f'failed to execute "{sql}" var={str(var_map)}, due to locked')
+                                        tmp_log.error(f'failed to execute "{sql}" var={str(var_map)}, due to skip locking items')
                                     else:
                                         tmp_log.error(f'failed to execute "{sql}" var={str(var_map)}')
                                         self.dump_error_message(tmp_log)
